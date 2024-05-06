@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户注册</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        html, body {
+            height: 100%;
+        }
+        .addUser {
+            width: 358px;
+            height: 588px;
+            border-radius: 15px;
+            padding: 0 50px;
+            position: relative;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #282c34;
+        }
+        .header {
+            font-size: 38px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 200px;
+            color: #61dafb;
+        }
+        .container {
+            height: 30px;
+            width: 250px;
+            position: relative;
+            margin-bottom: 20px; <!-- 间距 -->
+        }
+        .container1 {
+            height: 30px;
+            width: 250px;
+            position: relative;
+            margin-bottom: 20px; <!-- 间距 -->
+        }
+        .container_role {
+            height: 30px;
+            width: 250px;
+            position: relative;
+            margin-bottom: 40px; <!-- 更大的间距 -->
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            outline: none;
+            border: none;
+            box-sizing: border-box;
+            padding-left: 5px;
+            background-color: #282c34;
+            color: #61dafb;
+            caret-color: #61dafb;
+        }
+        input::placeholder {
+            color: #61dafb;
+        }
+        select {
+            width: 100%;
+            height: 100%;
+            outline: none;
+            border: none;
+            background: #282c34;
+            color: #61dafb;
+            padding-left: 5px;
+        }
+         span {
+            position: absolute;
+            content: "";
+            display: block;
+            background-color: #61dafb;
+            transition: transform .1s ease-in-out;
+        }
+        .top,
+        .bottom {
+            left: 0px;
+            right: 0px;
+            height: 2px;
+        }
+        .left,
+        .right {
+            top: 0px;
+            bottom: 0px;
+            width: 2px;
+            transform: scaleY(0);
+        }
+        .top {
+            top: 0px;
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition-delay: .2s;
+        }
+        .left {
+            left: 0px;
+            transform-origin: bottom center;
+            transition-delay: .3s;
+        }
+        .bottom {
+            bottom: 0px;
+        }
+        .right {
+            right: 0px;
+            transform-origin: top center;
+            transition-delay: .1s;
+        }
+        input:focus ~ .right {
+            transform: scaleY(1);
+            transform-origin: bottom center;
+        }
+        input:focus ~ .left {
+            transform: scaleY(1);
+            transform-origin: top center;
+        }
+        input:focus ~ .top {
+            transform: scaleY(1);
+            transform-origin: right center;
+        }
+        .btn {
+            text-align: center;
+            padding: 5px;
+            width: 55%;
+            background-color: #61dafb;
+            color: #fff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px; <!-- 控制按钮与选择框之间的间距 -->
+        }
+        .btn:hover {
+            background-color: #3b92c4;
+        }
+    </style>
+</head>
+<script type="text/javascript">
+    function submitData(event) {
+        event.preventDefault();  // 阻止默认表单提交
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const role = document.getElementById("role").value;
+
+        const userData = {
+            username,
+            password,
+            role
+        };
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/user/addUser");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 201 || xhr.status === 200) {
+                    console.log("User added successfully:", xhr.responseText);
+                    const proceedToLogin = confirm("用户添加成功！是否跳转到登录页面？");  // 显示询问对话框
+                    if (proceedToLogin) {
+                        // 用户选择“确认”，重定向到登录页面
+                        window.location.href = "/";  // 替换为你的登录页面 URL
+                    } else {
+                        // 用户选择“取消”，可以执行其他操作或保持当前页面
+                        console.log("用户选择不跳转到登录页面");
+                    }
+
+                } else {
+                    console.error("Error adding user:", xhr.status);
+                    alert("添加用户失败")
+                }
+            }
+        };
+        xhr.send(JSON.stringify(userData));
+
+    }
+
+    </script>
+</head>
+<body>
+    <div class="addUser">
+    <div class="header">添加用户</div>
+    <form onsubmit="submitData(event)">  <!-- 使用事件处理函数 -->
+        <div class="container">
+            <input type="text" id="username" name="username" placeholder="请输入用户名" required>
+        </div>
+
+        <div class="container1">
+            <input type="password" id="password" name="password" placeholder="请输入密码" required>
+        </div>
+
+        <div class="container_role">
+            <select id="role" required>
+                <option value="" disabled selected>选择角色</option>
+                <option value="admin">管理员</option>
+                <option value="user">用户</option>
+                <option value="suspicious">可疑用户</option>
+            </select>
+        </div>
+
+        <!-- 提交按钮 -->
+            <button type="submit" class="btn">提交</button>  <!-- 确保提交按钮触发提交 -->
+        </form>
+    </div>
+</body>
+</html>

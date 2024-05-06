@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户后台</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label, input[type="password"] {
+            display: block;
+            margin-top: 5px;
+        }
+        button {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>用户后台</h1>
+
+<div id="login-status">
+    <p>当前登录用户: <span id="user-name"></span></p>
+</div>
+
+<div class="form-group">
+    <label for="old-password">原密码:</label>
+    <input type="password" id="old-password" name="old-password" required>
+</div>
+
+<div class="form-group">
+    <label for="new-password">新密码:</label>
+    <input type="password" id="new-password" name="new-password" required>
+</div>
+
+<div class="form-group">
+    <label for="confirm-password">确认新密码:</label>
+    <input type="password" id="confirm-password" name="confirm-password" required>
+</div>
+
+<button id="change-password-btn">修改密码</button>
+<button id="logout-btn">退出登录</button>
+
+<script>
+    // 假设用户已经登录，这里只是模拟显示用户名
+    document.getElementById('user-name').textContent = '示例用户';
+
+    // 修改密码事件处理
+    document.getElementById('change-password-btn').addEventListener('click', function() {
+        var oldPassword = document.getElementById('old-password').value;
+        var newPassword = document.getElementById('new-password').value;
+        var confirmPassword = document.getElementById('confirm-password').value;
+
+        if (newPassword !== confirmPassword) {
+            alert('新密码和确认新密码不一致！');
+            return;
+        }
+
+        // TODO: 在实际应用中，这里应该发送Ajax请求到服务器验证旧密码和设置新密码
+        alert('密码修改成功！');
+
+        // 记录事件（这里只是简单在控制台输出，实际应用中应发送到服务器）
+        console.log('用户修改了密码');
+
+        // 重置表单
+        this.form.reset();
+    });
+
+    // 退出登录事件处理
+    document.getElementById('logout-btn').addEventListener('click', function() {
+        // TODO: 在实际应用中，这里应该发送Ajax请求到服务器注销用户的登录状态
+        alert('退出登录成功！');
+
+        // 记录事件（这里只是简单在控制台输出，实际应用中应发送到服务器）
+        console.log('用户退出了登录');
+
+        // 清除登录状态显示
+        document.getElementById('login-status').style.display = 'none';
+    });
+</script>
+
+</body>
+</html>
