@@ -10,12 +10,7 @@ from ..models.database import get_db
 from datetime import timedelta
 from sqlalchemy.ext.declarative import declarative_base
 
-
-
-
 user_router = APIRouter()
-
-
 
 # 添加用户
 class UserCreate(BaseModel):
@@ -23,7 +18,6 @@ class UserCreate(BaseModel):
     # email: str
     password: str
     role: str = "user"
-
 
 @user_router.post("/addUser",status_code=status.HTTP_201_CREATED)
 async def add_user(user_data:UserCreate,db:Session = Depends(get_db)):
@@ -63,7 +57,6 @@ async def login_for_access_token(form_data:OAuth2PasswordRequestForm = Depends()
 
     return {"access_token":access_token,"token_type":"bearer"}
 
-
 # 获取用户信息
 async def get_user(token: str = Depends(oauth2_scheme)) -> User:
     credentials_exception = HTTPException(
@@ -100,16 +93,45 @@ class ChangePassword(BaseModel):
 
 @user_router.put("/changePassword")
 async def changePassword(
-        password_data: ChangePassword,current_user: User = Depends(get_current_user),db: Session = Depends(get_db)
+        password_data: ChangePassword,
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
 ):
-    if not verify_password(password_data.old_password,current_user.hashed_password):
-        raise HTTPException(status_code=400,detail="密码错误")
+    try:
+        current_user = db.merge(current_user)
 
-    current_user.hashed_password = get_password_hash(password_data.new_password)
-    db.commit()
-    db.refresh(current_user)
+        if not verify_password(password_data.old_password, current_user.hashed_password):
+            raise HTTPException(status_code=400, detail="Password incorrect")
 
-    return {"msg":"更改密码成功"}
+        current_user.hashed_password = get_password_hash(password_data.new_password)
+        db.commit()
+        db.refresh(current_user)
+
+        return {"msg": "Password changed successfully"}
+
+    except Exception as e:
+        db.rollback()  # 确保在异常情况下回滚事务
+        raise e
+
+#删除用户
+@user_router.delete("/deleteUser/{username}",response_model=dict)
+async def delete_user(
+            username:str,
+            db:Session = Depends(get_db),
+            current_user = Depends(get_current_user)
+    ):
+        if current_user.role != "admin" or not current_user:
+            raise HTTPException(status_code=403,detail="非法用户越权，已记录日志")
+        else:
+            user = db.query(User).filter(User.username == username).first()
+            if not user:
+                raise HTTPException(status_code=404,detail="未找到此用户")
+
+            db.delete(user)
+            db.commit()
+
+            return {"msg":"用户删除成功"}
+
 
 
 
