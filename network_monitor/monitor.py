@@ -1,51 +1,49 @@
-import threading
-from capture import capture_packets
-from parser import parse_packet
-from transmitter import RabbitMQTransmitter
+import queue
 import time
+import threading
+from capture import start_capture_thread
+from filter import IPFilterStrategy, PortFilterStrategy
+from parser import PacketParser
+from transmitter import PacketTransmitter
+import config
 
-# 用于控制线程的停止
-stop_event = threading.Event()
 
-# 捕获数据包的处理函数
-def packet_handler(packet):
+def packet_processing_thread(packet_queue, output_queue, filter_strategy):
+    parser = PacketParser()
+    transmitter = PacketTransmitter(output_queue)
+
+    while True:
+        packet = packet_queue.get()
+        if packet is None:
+            break
+        if filter_strategy.apply_filter(packet):
+            parsed_packet = parser.parse_packet(packet)
+            transmitter.transmit_packet(parsed_packet)
+
+
+def main():
+    packet_queue = queue.Queue(config.OUTPUT_QUEUE_SIZE)
+    output_queue = queue.Queue()
+
+    # 启动数据包捕获线程
+    capture_thread = start_capture_thread(config.INTERFACE, packet_queue)
+
+    # 选择过滤策略
+    filter_strategy = IPFilterStrategy(config.FILTER_IP_ADDRESS)
+
+    # 启动数据包处理线程
+    processing_thread = threading.Thread(target=packet_processing_thread,
+                                         args=(packet_queue, output_queue, filter_strategy))
+    processing_thread.start()
+
     try:
-        # 解析数据包
-        parsed_data = parse_packet(packet)
-
-        # 传输解析后的数据
-        transmitter.transmit_data(parsed_data)
-    except Exception as e:
-        print(f"Error processing packet: {e}")
-
-# 主监控函数
-def start_monitoring():
-    # 初始化数据传输器
-    global transmitter
-    transmitter = RabbitMQTransmitter()
-
-    # 使用多线程捕获数据包
-    capture_thread = threading.Thread(target=capture_packets, args=(packet_handler,))
-    capture_thread.start()
-
-    # 等待一定时间后停止捕获
-    return capture_thread
-
-# 线程停止机制
-def stop_monitoring(capture_thread):
-    stop_event.set()  # 停止捕获
-    capture_thread.join()  # 等待线程结束
-    transmitter.close()  # 关闭传输器
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        packet_queue.put(None)
+        capture_thread.join()
+        processing_thread.join()
 
 
 if __name__ == "__main__":
-    # 启动监控
-    capture_thread = start_monitoring()
-
-    try:
-        # 模拟运行10秒后停止监控
-        time.sleep(10)
-        stop_monitoring(capture_thread)
-    except KeyboardInterrupt:
-        # 支持通过 Ctrl+C 终止监控
-        stop_monitoring(capture_thread)
+    main()

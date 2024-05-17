@@ -1,13 +1,5 @@
-# config.py
-import os
-
-# 捕获的网络接口
-NETWORK_INTERFACE = "WLAN"
-
-# 默认过滤规则
-BPF_FILTER = "tcp or udp"
-
-# 消息队列配置
-RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
-RABBITMQ_QUEUE = "network_traffic"
-
+# 配置文件
+INTERFACE = "eth0"
+FILTER_IP_ADDRESS = "192.168.1.1"
+FILTER_PORT = 80
+OUTPUT_QUEUE_SIZE = 100
