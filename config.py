@@ -5,6 +5,6 @@ import os
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 数据库相关路径
-SQL_DB_PATH = os.path.join(ROOT_DIR, "data_storage", "sql_database.db")
+SQL_DB_PATH = os.path.join(ROOT_DIR, "data_handle", "sql_database.db")
 # 其他路径配置
 LOG_DIR = os.path.join(ROOT_DIR, "logs")
