@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit={{}}">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>主机实时监控</title>
+  <link href="{{ static_url('dist/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ static_url('css/dashboard.css') }}" rel="stylesheet">
+  <script src="{{ static_url('js/analogClock.js') }}" ></script>
+</head>
+<body>
+<nav class="navbar navbar-dark fixed-top bg-black flex-md-nowrap p-0 shadow">
+  <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">主机实时监控</a>
+</nav>
+<div class="container-fluid">
+  <div class="row">
+    <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+    <div class="sidebar-sticky">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">
+              系统监控
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="#">
+              日志统计
+            </a>
+          </li>
+        </ul>
+      <div class="col-md-12">
+        <div class="card text-white bg-dark mb-3">
+          <div class="card-header">当前时间</div>
+          <div class="card-body" id="clock"></div>
+        </div>
+      </div>
+    </div>
+   </div>
+
+  </nav>
+</div>
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-baseline">
+    <h5>系统监控</h5>
+  </div>
+
+  {% block content %}{% end %}<>
+  <div class="jumbotron foot-section">
+    <hr class="my-4">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-2">
+          <img data-src="{{ static_url('images/face.png')}}"
+          class="lazyload blur-up img-fluid mx-auto d-block">
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

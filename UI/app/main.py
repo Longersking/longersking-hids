@@ -3,6 +3,7 @@ from fastapi import FastAPI,Request
 # from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from UI.app.controllers.user_controller import user_router
+from UI.app.controllers.system_message_controller import sys_message_router
 
 app = FastAPI()
 
@@ -12,7 +13,7 @@ template = Jinja2Templates(r"..\UI\app\views\templates")
 
 # 注册路由
 app.include_router(user_router, prefix="/user")
-# app.include_router(user_router, prefix="/user/")
+app.include_router(sys_message_router, prefix="/sys_message")
 # app.include_router(report_router, prefix="/report")
 
 
@@ -24,4 +25,5 @@ async def root(req: Request):
 @app.get("/add")
 async def add(req: Request):
     return template.TemplateResponse("add_user.html",context={"request":req})
+
 
