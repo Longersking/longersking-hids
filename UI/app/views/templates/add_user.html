@@ -113,45 +113,6 @@
         }
     })
 
-    function submitData(event) {
-        event.preventDefault();  // 阻止默认表单提交
-
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
-        const role = document.getElementById("role").value;
-
-        const userData = {
-            username,
-            password,
-            role
-        };
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/user/addUser");
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                if (xhr.status === 201 || xhr.status === 200) {
-                    console.log("User added successfully:", xhr.responseText);
-                    const proceedToLogin = confirm("用户添加成功！是否跳转到登录页面？");  // 显示询问对话框
-                    if (proceedToLogin) {
-                        // 用户选择“确认”，重定向到登录页面
-                        window.location.href = "/";  // 替换为你的登录页面 URL
-                    } else {
-                        // 用户选择“取消”，可以执行其他操作或保持当前页面
-                        console.log("用户选择不跳转到登录页面");
-                    }
-
-                } else {
-                    console.error("Error adding user:", xhr.status);
-                    alert("添加用户失败")
-                }
-            }
-        };
-        xhr.send(JSON.stringify(userData));
-
-    }
-
 </script>
 </body>
 </html>
