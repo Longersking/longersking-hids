@@ -1,3 +1,5 @@
+def capture_packets():
+    return None
 import threading
 import queue
 import scapy.all as scapy
