@@ -3,141 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <title>用户注册</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../static/js/vue2.js"></script>
+    <script src="../../static/js/elementUI.js"></script>
+    <script src="../../static/js/axios.js"></script>
+    <script src="../../static/js/request.js"></script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
+        #app {
+            display: flex;
+            justify-content: center;
+            align-content: center;
         }
-        html, body {
-            height: 100%;
+
+        .box {
+            background: white;
+            padding-top: 100px;
         }
-        .addUser {
-            width: 358px;
-            height: 588px;
-            border-radius: 15px;
-            padding: 0 50px;
-            position: relative;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #282c34;
-        }
-        .header {
-            font-size: 38px;
-            font-weight: bold;
-            text-align: center;
-            line-height: 200px;
-            color: #61dafb;
-        }
-        .container {
-            height: 30px;
-            width: 250px;
-            position: relative;
-            margin-bottom: 20px; <!-- 间距 -->
-        }
-        .container1 {
-            height: 30px;
-            width: 250px;
-            position: relative;
-            margin-bottom: 20px; <!-- 间距 -->
-        }
-        .container_role {
-            height: 30px;
-            width: 250px;
-            position: relative;
-            margin-bottom: 40px; <!-- 更大的间距 -->
-        }
-        input {
+
+        .form-box {
             width: 100%;
-            height: 100%;
-            outline: none;
-            border: none;
-            box-sizing: border-box;
-            padding-left: 5px;
-            background-color: #282c34;
-            color: #61dafb;
-            caret-color: #61dafb;
-        }
-        input::placeholder {
-            color: #61dafb;
-        }
-        select {
-            width: 100%;
-            height: 100%;
-            outline: none;
-            border: none;
-            background: #282c34;
-            color: #61dafb;
-            padding-left: 5px;
-        }
-         span {
-            position: absolute;
-            content: "";
-            display: block;
-            background-color: #61dafb;
-            transition: transform .1s ease-in-out;
-        }
-        .top,
-        .bottom {
-            left: 0px;
-            right: 0px;
-            height: 2px;
-        }
-        .left,
-        .right {
-            top: 0px;
-            bottom: 0px;
-            width: 2px;
-            transform: scaleY(0);
-        }
-        .top {
-            top: 0px;
-            transform: scaleX(0);
-            transform-origin: left center;
-            transition-delay: .2s;
-        }
-        .left {
-            left: 0px;
-            transform-origin: bottom center;
-            transition-delay: .3s;
-        }
-        .bottom {
-            bottom: 0px;
-        }
-        .right {
-            right: 0px;
-            transform-origin: top center;
-            transition-delay: .1s;
-        }
-        input:focus ~ .right {
-            transform: scaleY(1);
-            transform-origin: bottom center;
-        }
-        input:focus ~ .left {
-            transform: scaleY(1);
-            transform-origin: top center;
-        }
-        input:focus ~ .top {
-            transform: scaleY(1);
-            transform-origin: right center;
-        }
-        .btn {
-            text-align: center;
-            padding: 5px;
-            width: 55%;
-            background-color: #61dafb;
-            color: #fff;
+            padding: 30px 80px 30px 80px;
+            box-shadow: 0px 0px 5px 2px rgba(102, 102, 102, 0.24);
             border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            margin-top: 20px; <!-- 控制按钮与选择框之间的间距 -->
         }
-        .btn:hover {
-            background-color: #3b92c4;
+
+        .form {
+            width: 100%;
         }
     </style>
 </head>
+
+<body>
+<div id="app">
+    <el-row class="box animate__animated animate__rubberBand">
+        <el-col class="form-box" :span="12" :offset="6">
+            <h4>用户注册</h4>
+            <el-form :model="form" class="form">
+                <el-form-item label="用户名">
+                    <el-input type="text" v-model="form.username"></el-input>
+                </el-form-item>
+                <el-form-item label="密码">
+                    <el-input type="text" v-model="form.password"></el-input>
+                </el-form-item>
+                <el-form-item label="选择角色">
+                    <el-select v-model="form.role">
+                        <el-option v-for="item in roles" :key="item.value" :label="item.label" :value="item.value">
+
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-button @click="submit()" style="width: 100%" type="primary">
+                    提交
+                </el-button>
+            </el-form>
+        </el-col>
+    </el-row>
+</div>
+
+
 <script type="text/javascript">
+    new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                form: {
+                    username: "",
+                    password: "",
+                    role: "user"
+                },
+                roles: [
+                    {
+                        value: "admin",
+                        label: "管理员"
+                    },
+                    {
+                        label: "用户",
+                        value: "user"
+                    },
+                    {
+                        label: "可疑用户",
+                        value: "keyiuser"
+                    }
+                ]
+            }
+        },
+        methods: {
+            async submit() {
+                //     校验参数
+                if (this.form.username === "" || this.form.password === "") {
+                    this.$message("请完整填写表单")
+                }
+
+                //     发起请求
+                let res = await request.post("/user/addUser", {
+                    username: this.form.username,
+                    password: this.form.password,
+                    role: this.form.role
+                })
+                console.log(res.code)
+                if (res.code > 0) {
+                    this.$message({
+                        message: res.msg,
+                        type: 'success'
+                    });
+                }
+            },
+        }
+    })
+
     function submitData(event) {
         event.preventDefault();  // 阻止默认表单提交
 
@@ -177,32 +152,6 @@
 
     }
 
-    </script>
-</head>
-<body>
-    <div class="addUser">
-    <div class="header">添加用户</div>
-    <form onsubmit="submitData(event)">  <!-- 使用事件处理函数 -->
-        <div class="container">
-            <input type="text" id="username" name="username" placeholder="请输入用户名" required>
-        </div>
-
-        <div class="container1">
-            <input type="password" id="password" name="password" placeholder="请输入密码" required>
-        </div>
-
-        <div class="container_role">
-            <select id="role" required>
-                <option value="" disabled selected>选择角色</option>
-                <option value="admin">管理员</option>
-                <option value="user">用户</option>
-                <option value="suspicious">可疑用户</option>
-            </select>
-        </div>
-
-        <!-- 提交按钮 -->
-            <button type="submit" class="btn">提交</button>  <!-- 确保提交按钮触发提交 -->
-        </form>
-    </div>
+</script>
 </body>
 </html>

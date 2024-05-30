@@ -16,14 +16,17 @@ from .base import Base,engine
 #内存
 class Mem(Base):
     __tablename__ = "mem" #指定表名
-    id = Column(BIGINT,primary_key=True)
+)
+
+
+id = Column(BIGINT,primary_key=True)
     percent = Column(DECIMAL(6,2)) #保留6位有效数字，保留两位小数
     total = Column(DECIMAL(8,2))
     used = Column(DECIMAL(8,2))
     free = Column(DECIMAL(8,2))
     create_date = Column(DATE)
     create_time = Column(TIME)
-    create_dt = Column(DATETIME)
+    create_dt = Column(DATETIME
 
 
 # 交换分区
