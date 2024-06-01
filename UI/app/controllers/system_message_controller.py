@@ -1,21 +1,130 @@
-from fastapi import APIRouter,Depends,HTTPException,status
-from fastapi.templating import Jinja2Templates
-from data_handle.chart import Chart
+from fastapi import APIRouter
+from typing import Dict,Any
+
+
 from host_detection.sys_monitor import Monitor
+from .. import common
 
 # 配置路由
 sys_message_router= APIRouter()
 
-# 默认页面
-template = Jinja2Templates(r"..\UI\app\views\templates")
-
-# 绘制cpu水晶球
+# 获取当前cpu信息
 @sys_message_router.get("/cpu")
-async def sys_message():
+async def cpu_message( ) -> Dict[str, Any]:
+    """
+        获取当前 CPU 信息的异步接口。
+
+        Args:
+            m (Monitor): Monitor 类的实例，用于获取 CPU 信息。
+
+        Returns:
+            Dict[str, Any]: 返回包含 CPU 信息的字典。
+    """
     m = Monitor()
-    c = Chart()
+
     cpu_info = m.cpu()
-    data = dict(
-        cpu_liquid = c.liquid_html("cpu_avg","CPU平均使用率",cpu_info['cpu_avg'])
-    )
-    return cpu_info
+
+    return common.dataReturn(1,msg="CPU message",data=cpu_info)
+
+
+# 获取当前内存交互信息
+@sys_message_router.get("/mem")
+async def cpu_message( ) -> Dict[str, Any]:
+    """
+        获取当前 内存 信息的异步接口。
+
+        Args:
+            m (Monitor): Monitor 类的实例，用于获取 内存 信息。
+
+        Returns:
+            Dict[str, Any]: 返回包含 内存 信息的字典。
+    """
+    m = Monitor()
+
+    mem_info = m.mem()
+
+    return common.dataReturn(1,msg="MEM message",data=mem_info)
+
+
+# 获取当前交互内存区信息
+@sys_message_router.get("/swap_memory")
+async def swap_memory_message( ) -> Dict[str, Any]:
+    """
+        获取当前 交互分区 信息的异步接口。
+
+        Args:
+            m (Monitor): Monitor 类的实例，用于获取 交互分区 信息。
+
+        Returns:
+            Dict[str, Any]: 返回包含 交互分区 信息的字典。
+    """
+    m = Monitor()
+
+    swap_memory_info = m.swap_memory()
+
+    return common.dataReturn(1,msg="SWAP_MEMORY message",data=swap_memory_info)
+
+
+# 获取当前磁盘信息
+@sys_message_router.get("/disk")
+async def disk_message( ) -> Dict[str, Any]:
+    """
+        获取当前 磁盘 信息的异步接口。
+
+        Args:
+            m (Monitor): Monitor 类的实例，用于获取 磁盘 信息。
+
+        Returns:
+            Dict[str, Any]: 返回包含 磁盘 信息的字典。
+    """
+    m = Monitor()
+
+    disk_info = m.disk()
+
+    return common.dataReturn(1,msg="DISK message",data=disk_info)
+
+
+# 获取当前网卡信息
+@sys_message_router.get("/net")
+async def net_message( ) -> Dict[str, Any]:
+    """
+        获取当前 网卡 信息的异步接口。
+
+        Args:
+            m (Monitor): Monitor 类的实例，用于获取 网卡 信息。
+
+        Returns:
+            Dict[str, Any]: 返回包含 网卡 信息的字典。
+    """
+    m = Monitor()
+
+    net_info = m.net()
+
+    return common.dataReturn(1,msg="NET message",data=net_info)
+
+
+# 获取当前主机用户最近登录信息
+@sys_message_router.get("/logined_users")
+async def logined_users( ) -> Dict[str, Any]:
+    """
+        获取当前 主机用户登录 信息的异步接口。
+
+        Args:
+            m (Monitor): Monitor 类的实例，用于获取 主机用户登录 信息。
+
+        Returns:
+            Dict[str, Any]: 返回包含 主机用户登录 信息的字典。
+    """
+    m = Monitor()
+
+    logined_users = m.logined_users()
+
+    return common.dataReturn(1,msg="LOGINED_USERS",data=logined_users)
+
+
+
+
+
+
+
+
