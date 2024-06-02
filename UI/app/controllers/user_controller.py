@@ -27,7 +27,6 @@ class UserCreate(BaseModel):
 
 @user_router.post("/addUser", status_code=status.HTTP_201_CREATED)
 async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
-
     # 检测用户是否重复
     if db.query(User).filter(User.username == user_data.username).first():
         return common.dataReturn(1, '用户已存在')
@@ -58,7 +57,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expire
     )
-    return common.dataReturn(1,'添加用户成功',{"access_token": access_token, "token_type": "bearer"})
+    return common.dataReturn(1,'登录成功',{"access_token": access_token, "token_type": "bearer"})
 
 
 # 获取用户信息
