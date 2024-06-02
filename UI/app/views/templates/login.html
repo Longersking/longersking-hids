@@ -51,33 +51,7 @@
     </div>
 
 </div>
-<!--<div class="login">-->
-<!--    <div class="header">登录</div>-->
-<!--    &lt;!&ndash; 表单，用于提交用户名和密码 &ndash;&gt;-->
-<!--    <form action="/user/login" method="POST"> &lt;!&ndash; 修改 action 为你想要提交的地址 &ndash;&gt;-->
-<!--        &lt;!&ndash; 用户名输入框 &ndash;&gt;-->
-<!--        <div class="container">-->
-<!--            <input type="text" name="username" placeholder="请输入用户名" required> &lt;!&ndash; 使用 name 属性来定义表单字段名 &ndash;&gt;-->
-<!--            <span class="left"></span>-->
-<!--            <span class="right"></span>-->
-<!--            <span class="top"></span>-->
-<!--            <span class="bottom"></span>-->
-<!--        </div>-->
 
-<!--        &lt;!&ndash; 密码输入框 &ndash;&gt;-->
-<!--        <div class="container1">-->
-<!--            <input type="password" name="password" placeholder="请输入密码" required> &lt;!&ndash; `required` 表示该字段必填 &ndash;&gt;-->
-<!--            <span class="left"></span>-->
-<!--            <span class="right"></span>-->
-<!--            <span class="top"></span>-->
-<!--            <span class="bottom"></span>-->
-<!--        </div>-->
-
-<!--        &lt;!&ndash; 提交按钮 &ndash;&gt;-->
-<!--        <button type="submit" class="btn">立即登录</button>-->
-<!--        &lt;!&ndash; 使用 `button` 标签，并设置 `type="submit"` &ndash;&gt;-->
-<!--    </form>-->
-<!--</div>-->
 </body>
 <script type="text/javascript">
     new Vue({
@@ -90,6 +64,10 @@
                 }
             }
         },
+        mounted(){
+        //     检查是否已经登录
+
+        },
         methods: {
             async submit() {
                 //     校验参数
@@ -98,15 +76,23 @@
                 }
 
                 //     发起请求
-                let res = await request.post("/user/login", {
-                    username: this.form.username,
-                    password: this.form.password
-                })
+                let fd = new FormData()
+                fd.append("username",this.form.username)
+                fd.append("password",this.form.password)
+
+                let res = await request.post_urlencode("/user/login", fd)
                 if (res.code > 0) {
+                    // 储存token
+                    localStorage.setItem("userToken",res.data.access_token)
                     this.$message({
                         message: res.msg,
                         type: 'success'
                     });
+                }else{
+                    this.$message({
+                        message:res.msg,
+                        type:"error"
+                    })
                 }
             },
         }

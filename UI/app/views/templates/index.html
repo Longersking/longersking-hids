@@ -1,1 +1,268 @@
- 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIDS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../static/js/vue2.js"></script>
+    <script src="../../static/js/elementUI.js"></script>
+    <script src="../../static/js/axios.js"></script>
+    <script src="../../static/js/request.js"></script>
+    <script src="../../static/js/vue-router.js"></script>
+    <style>
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+
+        }
+
+        body {
+            padding: 0;
+            height: 100%;
+            margin: 0;
+        }
+
+        #app {
+            height: 100%;
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .header {
+            background: #409EFF;
+            display: flex;
+            align-items: center;
+            height: auto;
+            justify-content: space-between;
+            padding-right: 30px;
+        }
+
+        .aside {
+            height: 100%;
+            width: auto !important;
+        }
+
+        .main {
+            height: 100%;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background: red;
+            width: 100%;
+        }
+
+        .page-container {
+
+        }
+
+        .menu {
+            height: 100%;
+        }
+
+        .page-content {
+            height: 100%;
+            width: 100%;
+        }
+
+        .menu-popover {
+        }
+        .info-menu{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color:white;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-container class="app-container">
+        <el-header class="header">
+            <div @click="menuChange"><i class="el-icon-menu"></i></div>
+            <el-popover
+                    class="menu-popover"
+                    placement="top-start"
+                    width="200"
+                    trigger="hover">
+                <div slot="reference" class="info-menu">
+                    <el-avatar :size="size" src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"></el-avatar>
+                    <span>${userInfo.username}</span>
+                </div>
+            </el-popover>
+        </el-header>
+        <el-container class="page-container">
+            <el-aside class="aside">
+                <el-menu
+                        default-active="2"
+                        class="menu"
+                        background-color="#545c64"
+                        text-color="#fff"
+                        active-text-color="#ffd04b"
+                        :collapse="isCollapse">
+                    <el-submenu v-for="items in menuList" :index="items.index + ''">
+                        <template slot="title">
+                            <i :class="items.icon"></i>
+                            <span>${items.name}</span>
+                        </template>
+                        <el-menu-item v-for="item in items.child" :index="item.index + ''"
+                                      @click="handleMenuChange(item.index,item.url)">
+                            <i :class="item.icon"></i>
+                            <span slot="title">${item.name}</span>
+                        </el-menu-item>
+                    </el-submenu>
+                </el-menu>
+            </el-aside>
+            <el-container class="main-container">
+                <el-header>
+                    <template>
+                        <el-tabs v-model="editableTabsValue" type="card" closable @tab-remove="removeTab"
+                                 @tab-click="tabClick">
+                            <el-tab-pane
+                                    v-for="(item, index) in editableTabs"
+                                    :key="item.name"
+                                    :label="item.title"
+                                    :name="item.name"
+                            >
+                            </el-tab-pane>
+                        </el-tabs>
+                    </template>
+                </el-header>
+                <el-main class="main">
+                    <iframe v-for="frame in editableTabs" v-show="nowPageUrl == frame.url" :src="frame.url"
+                            frameborder="no" border="0" marginwidth="0" marginheight="0"
+                            allowtransparency="yes" class="page-content"></iframe>
+                </el-main>
+            </el-container>
+        </el-container>
+        <!--        <el-footer class="footer">-->
+        <!--            底部区域-->
+        <!--        </el-footer>-->
+    </el-container>
+</div>
+
+<script>
+    new Vue({
+        delimiters: ['${', '}'],
+        el: '#app',
+        data: function () {
+            return {
+                menuList: [
+                    {
+                        index: 0,
+                        name: "系统管理",
+                        icon: "el-icon-s-home",
+                        child: [
+                            {
+                                index: "0-0",
+                                name: "首页",
+                                icon: "el-icon-s-home",
+                                url: "/"
+                            }
+                        ]
+                    },
+                    {
+                        index: 1,
+                        name: "用户管理",
+                        icon: "el-icon-user-solid",
+                        child: [
+                            {
+                                index: "1-0",
+                                name: "添加用户",
+                                icon: "el-icon-circle-plus",
+                                url: "/add"
+                            }
+                        ]
+                    },
+                ],
+                isCollapse: true,
+                nowPageUrl: "/",
+                editableTabsValue: '2',
+                editableTabs: [
+                    {
+                        name: "首页",
+                        title: "首页",
+                        url: "/"
+                    }
+                ],
+                tabIndex: 1,
+                maxTab: 10,
+                userInfo:{}
+            }
+        },
+        async mounted() {
+            //     获取用户信息
+            let token = localStorage.getItem("userToken");
+            //     获取信息
+            let config = {
+                headers: {
+                    "authorization": "bearer " + token
+                }
+            }
+            let res = await request.get("/user/userMessage", {}, config)
+            this.userInfo = res
+        },
+        methods: {
+            menuChange() {
+                if (this.isCollapse === true) {
+                    this.isCollapse = false
+                } else {
+                    this.isCollapse = true
+                }
+            },
+            removeTab(targetName) {
+                let tabs = this.editableTabs;
+                let activeName = this.editableTabsValue;
+                if (activeName === targetName) {
+                    tabs.forEach((tab, index) => {
+                        if (tab.name === targetName) {
+                            let nextTab = tabs[index + 1] || tabs[index - 1];
+                            if (nextTab) {
+                                activeName = nextTab.name;
+                            }
+                        }
+                    });
+                }
+
+                this.editableTabsValue = activeName;
+                this.editableTabs = tabs.filter(tab => tab.name !== targetName);
+            },
+            changePage(url) {
+                this.nowPageUrl = url
+            },
+            addTab(item) {
+                console.log(item)
+                for (x of this.editableTabs) {
+                    if (item.name === x.name && item.url === x.url) {
+                        return false;
+                    }
+                }
+                this.editableTabs.push({
+                    title: item.name,
+                    name: item.name,
+                    url: item.url
+                })
+            },
+            handleMenuChange(index, url) {
+                //     切换iframe
+                this.changePage(url)
+                let idx = index.split("-")
+                //     添加tab
+                this.addTab(this.menuList[idx[0]]['child'][idx[1]])
+            },
+            tabClick(e) {
+                this.changePage(this.editableTabs[e.index].url)
+            }
+        }
+    })
+</script>
+</body>
+</html>

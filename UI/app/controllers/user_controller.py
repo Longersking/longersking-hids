@@ -19,7 +19,54 @@ from sqlalchemy.ext.declarative import declarative_base
 # 注册用户路由
 user_router = APIRouter()
 
+<<<<<<< HEAD
 # 内部接口调用
+=======
+
+# 添加用户
+class UserCreate(BaseModel):
+    username: Union[str,int]
+    # email: str
+    password: Union[str,int]
+    role: str = "user"
+
+
+@user_router.post("/addUser", status_code=status.HTTP_201_CREATED)
+async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
+    # 检测用户是否重复
+    if db.query(User).filter(User.username == user_data.username).first():
+        return common.dataReturn(1, '用户已存在')
+
+    # 创建用户并保存到数据库
+    user = User(
+        username=user_data.username,
+        hashed_password=get_password_hash(user_data.password),
+        role=user_data.role
+    )
+    # 添加表
+    db.add(user)
+    db.commit()
+    # 刷新表
+    db.flush(user)
+    return common.dataReturn(1,'添加用户成功',user)
+
+
+# 用户登录
+@user_router.post("/login")
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
+                                 db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == form_data.username).first()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        return common.dataReturn(-1, '用户名或密码错误', user)
+
+    access_token_expire = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expire
+    )
+    return common.dataReturn(1,'登录成功',{"access_token": access_token, "token_type": "bearer"})
+
+
+>>>>>>> du
 # 获取用户信息
 async def get_user(token: str = Depends(oauth2_scheme)) -> User:
     credentials_exception = HTTPException(
