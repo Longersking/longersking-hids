@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>系统首页</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/request.js"></script>
+    <script src="../../../static/js/echarts.js"></script>
+
+
+    <style>
+        .info-panel-box {
+            padding: 5px;
+        }
+
+        .info-panel {
+            display: flex;
+        }
+
+        .info-card {
+            width: 100%;
+        }
+
+        .info-card .card-content {
+            display: flex;
+            justify-content: space-evenly;
+        }
+
+        .load-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <el-row class="info-panel-box">
+        <el-col :span="24" class="info-panel">
+            <el-card class="box-card info-card" shadow="always">
+                <div class="card-header">
+                    负载信息
+                </div>
+                <el-divider></el-divider>
+                <div class="card-content">
+                    <div class="load-group">
+                        <el-progress color="#318322" type="circle" :percentage="loadInfo.cpu.percent_avg"></el-progress>
+                        <span style="padding: 5px">
+                            CPU
+                        </span>
+                    </div>
+                    <div class="load-group">
+                        <el-progress type="circle" color="#704372" :percentage="Number((loadInfo.mem.used / loadInfo.mem.total *100).toFixed(2))"></el-progress>
+                        <span style="padding: 5px">
+                            RAM
+                        </span>
+                    </div>
+                    <div class="load-group">
+                        <el-progress type="circle" color="red" :percentage="Number((loadInfo.swap.used / loadInfo.swap.total *100).toFixed(2))"></el-progress>
+                        <span style="padding: 5px">
+                            SWAP
+                        </span>
+                    </div>
+                    <div class="load-group" v-for="item in loadInfo.disk">
+                        <el-progress type="circle" color="#47c3ff" :percentage="Number((item.used.used / item.used.total *100).toFixed(2))"></el-progress>
+                        <span style="padding: 5px">
+                            ${item.device}
+                        </span>
+                    </div>
+                </div>
+            </el-card>
+        </el-col>
+        <el-col :span="12">
+            <el-card>
+                <div class="card-header">
+                    流量统计
+                </div>
+            </el-card>
+        </el-col>
+        <el-col :span="12">
+            <el-card>
+                <div class="card-header">
+                    网络
+                </div>
+            </el-card>
+        </el-col>
+    </el-row>
+</div>
+
+
+<script type="text/javascript">
+    new Vue({
+        delimiters: ['${', '}'],
+        el: '#app',
+        data: function () {
+            return {
+                loadInfo: {},
+                interval: null,
+            }
+        },
+        mounted() {
+            // this.drawCharts()
+            this.getSysInfo()
+            this.updateInterval()
+        },
+        methods: {
+            //     获取系统运行信息
+            async getSysInfo() {
+                let res = await request.get("/sys_message/load_info")
+                if (res.code === 1) {
+                    this.loadInfo = res.data
+                }
+            },
+            // 更新定时器
+            updateInterval() {
+                this.interval = setInterval(() => {
+                    this.getSysInfo()
+                }, 1000)
+            }
+        }
+    })
+
+</script>
+</body>
+</html>

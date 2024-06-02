@@ -13,26 +13,11 @@ app.mount("/static", StaticFiles(directory="app/static"))
 # 注册路由
 app.include_router(user_router, prefix="/user")
 
+# 系统信息路由
+app.include_router(sys_message_router, prefix="/sys_message")
+
 # 模板路由
 app.include_router(templates.router)
 
-app.include_router(sys_message_router, prefix="/sys_message")
-
-<<<<<<< HEAD
-# app.include_router()
-
-# app.include_router(report_router, prefix="/report")
 
 
-# 异步函数async
-@app.get("/")
-async def root(req: Request):
-    return template.TemplateResponse("login.html", context={"request": req})
-
-
-
-@app.get("/add", response_class=HTMLResponse)
-async def add(req: Request):
-    return template.TemplateResponse("add_user.html", context={"request": req})
-=======
->>>>>>> du

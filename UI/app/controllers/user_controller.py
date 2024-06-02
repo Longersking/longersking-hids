@@ -19,9 +19,7 @@ from sqlalchemy.ext.declarative import declarative_base
 # 注册用户路由
 user_router = APIRouter()
 
-<<<<<<< HEAD
 # 内部接口调用
-=======
 
 # 添加用户
 class UserCreate(BaseModel):
@@ -65,8 +63,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     return common.dataReturn(1,'登录成功',{"access_token": access_token, "token_type": "bearer"})
 
-
->>>>>>> du
 # 获取用户信息
 async def get_user(token: str = Depends(oauth2_scheme)) -> User:
     credentials_exception = HTTPException(

@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from typing import Dict,Any
+import json
 
 
 from host_detection.sys_monitor import Monitor
@@ -29,7 +30,7 @@ async def cpu_message( ) -> Dict[str, Any]:
 
 # 获取当前内存交互信息
 @sys_message_router.get("/mem")
-async def cpu_message( ) -> Dict[str, Any]:
+async def mem_message( ) -> Dict[str, Any]:
     """
         获取当前 内存 信息的异步接口。
 
@@ -121,6 +122,25 @@ async def logined_users( ) -> Dict[str, Any]:
 
     return common.dataReturn(1,msg="LOGINED_USERS",data=logined_users)
 
+@sys_message_router.get("/load_info")
+async def load_info():
+    cpu = await cpu_message()
+    cpu = cpu['data']
+    mem = await mem_message()
+    mem = mem['data']
+    swap=await swap_memory_message()
+    swap = swap['data']
+    disk = await  disk_message()
+    disk = disk['data']
+    net = await  net_message()
+    net = net['data']
+    return common.dataReturn(1,"负载信息",{
+        "cpu":cpu,
+        "mem":mem,
+        "swap":swap,
+        "disk":disk,
+        "net":net
+    })
 
 
 
