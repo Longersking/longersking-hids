@@ -64,8 +64,8 @@
                         <el-progress type="circle" color="red" :percentage="Number((loadInfo.swap.used / loadInfo.swap.total *100).toFixed(2))"></el-progress>
                         <span style="padding: 5px">
                             SWAP
-                        </span>
-                    </div>
+
+                        </span> </div>
                     <div class="load-group" v-for="item in loadInfo.disk">
                         <el-progress type="circle" color="#47c3ff" :percentage="Number((item.used.used / item.used.total *100).toFixed(2))"></el-progress>
                         <span style="padding: 5px">
