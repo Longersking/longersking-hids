@@ -53,6 +53,7 @@ async def get_current_user(current_user: User = Depends(get_user)):
 async def get_current_user_message(current_user: User = Depends(get_current_user)):
     return common.dataReturn(1, 'Get current user message',data=current_user)
 
+
 # 添加用户
 class UserCreate(BaseModel):
     username: Union[str,int]
