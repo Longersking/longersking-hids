@@ -1,26 +1,49 @@
-def capture_packets():
-    return None
+# 文件路径: /mnt/data/capture.py
+
+from scapy.all import sniff
+from scapy.layers.inet import IP
 import threading
-import queue
-import scapy.all as scapy
 
-class PacketCapture:
-    def __init__(self, interface, packet_queue):
+class TrafficCapture:
+    def __init__(self, interface):
         self.interface = interface
-        self.packet_queue = packet_queue
 
-    def packet_handler(self, packet):
-        # 复制数据包
-        packet_copy = packet.copy()
-        self.packet_queue.put(packet_copy)
-        # 释放原数据包
-        del packet
+    def process_packet(self, packet):
+        if IP in packet:
+            ip_layer = packet[IP]
+            src_ip = ip_layer.src
+            dst_ip = ip_layer.dst
+            proto = ip_layer.proto
+
+            if proto == 6:  # TCP协议
+                protocol = "TCP"
+            elif proto == 17:  # UDP协议
+                protocol = "UDP"
+            else:
+                protocol = "Other"
+
+            traffic_size = len(packet)
+
+            print(f"Interface: {self.interface}, Source IP: {src_ip}, Destination IP: {dst_ip}, Protocol: {protocol}, Traffic Size: {traffic_size} bytes")
 
     def start_capture(self):
-        scapy.sniff(iface=self.interface, prn=self.packet_handler, store=False)
+        try:
+            sniff(iface=self.interface, prn=self.process_packet, store=0)
+        except Exception as e:
+            print(f"Error capturing on interface {self.interface}: {e}")
 
-def start_capture_thread(interface, packet_queue):
-    capture = PacketCapture(interface, packet_queue)
-    capture_thread = threading.Thread(target=capture.start_capture)
-    capture_thread.start()
-    return capture_thread
+def start_capture_on_interface(interface):
+    capture = TrafficCapture(interface)
+    capture.start_capture()
+
+def capture_on_interfaces(interfaces):
+    threads = []
+    for interface in interfaces:
+        thread = threading.Thread(target=start_capture_on_interface, args=(interface,))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+

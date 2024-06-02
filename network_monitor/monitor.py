@@ -1,48 +1,31 @@
-import queue
+# 文件路径: /mnt/data/main.py
+
 import time
-import threading
-from capture import start_capture_thread
-from filter import IPFilterStrategy, PortFilterStrategy
-from parser import PacketParser
-from transmitter import PacketTransmitter
-import config
+from capture import capture_on_interfaces
+
+from host_detection import sys_monitor
 
 
-def packet_processing_thread(packet_queue, output_queue, filter_strategy):
-    parser = PacketParser()
-    transmitter = PacketTransmitter(output_queue)
-
-    while True:
-        packet = packet_queue.get()
-        if packet is None:
-            break
-        if filter_strategy.apply_filter(packet):
-            parsed_packet = parser.parse_packet(packet)
-            transmitter.transmit_packet(parsed_packet)
+def get_network_interfaces():
+    # 根据系统获取所有网卡接口
+    # 示例：返回固定的网卡接口列表
+    sys_monitor.Monitor().net()
+    network_interfaces = [net_int["name"] for net_int in sys_monitor.Monitor().net() ]
+    return network_interfaces
 
 
 def main():
-    packet_queue = queue.Queue(config.OUTPUT_QUEUE_SIZE)
-    output_queue = queue.Queue()
+    interfaces = get_network_interfaces()
 
-    # 启动数据包捕获线程
-    capture_thread = start_capture_thread(config.INTERFACE, packet_queue)
-
-    # 选择过滤策略
-    filter_strategy = IPFilterStrategy(config.FILTER_IP_ADDRESS)
-
-    # 启动数据包处理线程
-    processing_thread = threading.Thread(target=packet_processing_thread,
-                                         args=(packet_queue, output_queue, filter_strategy))
-    processing_thread.start()
-
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        packet_queue.put(None)
-        capture_thread.join()
-        processing_thread.join()
+    while True:
+        try:
+            capture_on_interfaces(interfaces)
+        except KeyboardInterrupt:
+            print("Stopping capture...")
+            break
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            time.sleep(5)  # 短暂休息后重试
 
 
 if __name__ == "__main__":
