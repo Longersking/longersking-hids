@@ -46,4 +46,3 @@ def capture_on_interfaces(interfaces):
     for thread in threads:
         thread.join()
 
-

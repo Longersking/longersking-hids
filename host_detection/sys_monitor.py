@@ -123,11 +123,12 @@ class Monitor(object):
 
 if __name__ == '__main__':
     test = Monitor()
-    for v in range(1,11):
-        print(test.cpu())
-        time.sleep(1)
+    # for v in range(1,11):
+    #     print(test.cpu())
+    #     time.sleep(1)
     # print(test.mem())
     # pprint(test.swap_memory())
     # pprint(test.disk())
-    # pprint(test.net())
-    pprint(test.logined_users())
+    # res = [net_name["name"] for net_name in test.net() ]
+    pprint([net_name["name"] for net_name in test.net() ])
+    # pprint(test.logined_users())
