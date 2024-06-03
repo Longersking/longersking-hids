@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>系统首页</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/request.js"></script>
+    <script src="../../../static/js/echarts.js"></script>
+
+
+    <style>
+        .info-panel-box {
+            padding: 5px;
+        }
+
+        .info-panel {
+            display: flex;
+        }
+
+        .info-card {
+            width: 100%;
+        }
+
+        .info-card .card-content {
+            display: flex;
+            justify-content: space-evenly;
+        }
+
+        .load-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chartFlowRate {
+            min-height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <el-row class="info-panel-box">
+        <el-col :span="24" class="info-panel">
+            <el-card class="box-card info-card" shadow="always">
+                <div class="card-header">
+                    负载信息
+                </div>
+                <el-divider></el-divider>
+                <div class="card-content">
+                    <div class="load-group">
+                        <el-progress color="#318322" type="circle" :percentage="loadInfo.cpu.percent_avg"></el-progress>
+                        <span style="padding: 5px">
+                            CPU
+                        </span>
+                    </div>
+                    <div class="load-group">
+                        <el-progress type="circle" color="#704372"
+                                     :percentage="Number((loadInfo.mem.used / loadInfo.mem.total *100).toFixed(2))"></el-progress>
+                        <span style="padding: 5px">
+                            RAM
+                        </span>
+                    </div>
+                    <div class="load-group">
+                        <el-progress type="circle" color="red"
+                                     :percentage="Number((loadInfo.swap.used / loadInfo.swap.total *100).toFixed(2))"></el-progress>
+                        <span style="padding: 5px">
+                            SWAP
+                        </span></div>
+                    <div class="load-group" v-for="item in loadInfo.disk">
+                        <el-progress type="circle" color="#47c3ff"
+                                     :percentage="Number((item.used.used / item.used.total *100).toFixed(2))"></el-progress>
+                        <span style="padding: 5px">
+                            ${item.device}
+                        </span>
+                    </div>
+                </div>
+            </el-card>
+        </el-col>
+        <el-col :span="12">
+            <el-card>
+                <div class="card-header">
+                    流量统计
+                </div>
+                <el-select v-model="nowNet" placeholder="选择网卡">
+                    <el-option v-for="item in flowType" :label="item" :value="item" :key="item">
+                    </el-option>
+                </el-select>
+                <div ref="chartFlowRate" class="chartFlowRate">
+                </div>
+            </el-card>
+        </el-col>
+        <el-col :span="12">
+            <el-card>
+                <div class="card-header">
+                    磁盘I/O
+                </div>
+            </el-card>
+        </el-col>
+    </el-row>
+</div>
+
+
+<script type="text/javascript">
+    new Vue({
+        delimiters: ['${', '}'],
+        el: '#app',
+        data: function () {
+            return {
+                loadInfo: {},
+                interval: null,
+                flowRateType: {},
+                flowType: [],
+                chartFlowRate: null,
+                flowData: {},
+                flowSecData: {},     // 流量瞬时数据
+                nowNet: "",
+                flowTime: [],
+            }
+        },
+        mounted() {
+            this.getSysInfo()
+            this.updateInterval()
+        },
+        updated() {
+            this.drawCharts()
+        },
+        methods: {
+            //     获取系统运行信息
+            async getSysInfo() {
+                let res = await request.get("/sys_message/load_info")
+                if (res.code === 1) {
+                    this.loadInfo = res.data
+                    let data = []
+                    for (i = 0, data = res.data.net; i < data.length; i++) {
+                        // 记录网卡流量数据
+                        if (this.flowData[data[i]['name']] === null || this.flowData[data[i]['name']] === undefined) {
+                            this.flowData[data[i]['name']] = [[], []]
+                            this.flowSecData[data[i]['name']] = [[], []]
+                        } else {
+                            let time = Date.now()
+                            this.flowData[data[i]['name']][0].unshift([time, data[i]['bytes_recv']])
+                            this.flowData[data[i]['name']][1].unshift([time, data[i]['bytes_sent']])
+                            if (this.flowData[data[i]['name']][0].length >= 1 && this.flowData[data[i]['name']][1].length >= 1) {
+                                this.flowSecData[data[i]['name']][0].unshift([time, data[i]['bytes_recv'] - this.flowData[data[i]['name']][0][this.flowData[data[i]['name']][0].length-1][1]])
+                                this.flowSecData[data[i]['name']][1].unshift([time, data[i]['bytes_sent'] - this.flowData[data[i]['name']][1][this.flowData[data[i]['name']][1].length-1][1]])
+                            }else{
+                                this.flowSecData[data[i]['name']][0].unshift([time,0])
+                                this.flowSecData[data[i]['name']][1].unshift([time,0])
+                            }
+                        }
+                        console.log(this.flowData)
+                        if (this.flowType.indexOf(data[i]['name']) === -1) {
+                            this.flowType.unshift(data[i]['name'])
+                        }
+                    }
+                    if (this.nowNet === "") {
+                        this.nowNet = this.flowType[0]
+                    }
+                    this.flowTime.unshift()
+
+                    //     更新图表
+                    this.updateDraw();
+                }
+            },
+            updateDraw() {
+                let data = this.flowSecData[this.nowNet]
+                let series = [
+                    {
+                        name: "入网",
+                        type: 'line',
+                        stack: 'Total',
+                        areaStyle: {},
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: data[0]
+                    },
+                    {
+                        name: "出网",
+                        type: 'line',
+                        stack: 'Total',
+                        areaStyle: {},
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        data: data[1]
+                    }
+                ];
+                series.push();
+
+                this.chartFlowRateOption['series'] = series
+                this.chartFlowRate.setOption(this.chartFlowRateOption);
+            },
+            // 更新定时器
+            updateInterval() {
+                this.interval = setInterval(() => {
+                    this.getSysInfo()
+                }, 1000)
+            },
+            drawCharts() {
+                let dom1 = this.$refs.chartFlowRate;
+                this.chartFlowRate = echarts.init(dom1);
+
+                this.chartFlowRateOption = {
+                    title: {
+                        text: '流量折线图'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross',
+                            label: {
+                                backgroundColor: '#6a7985'
+                            }
+                        }
+                    },
+                    legend: {
+                        data: ["入网", "出网"]
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: 'time',
+                            boundaryGap: false,
+                            data: this.flowTime
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                }
+                this.chartFlowRateOption && this.chartFlowRate.setOption(this.chartFlowRateOption);
+            }
+        }
+
+    })
+</script>
+</body>
+</html>
