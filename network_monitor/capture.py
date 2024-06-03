@@ -1,58 +1,48 @@
-from scapy.all import sniff, wrpcap
-from scapy.layers.inet import IP, TCP, UDP
-from scapy.layers.http import HTTPRequest, HTTPResponse
+# 文件路径: /mnt/data/capture.py
 
-from host_detection import sys_monitor
+from scapy.all import sniff
+from scapy.layers.inet import IP
+import threading
 
-def get_all_interfaces():
-    """获取所有网络接口名称"""
-    m = sys_monitor.Monitor().net()
-    return [net_name["name"] for net_name in m ]
+class TrafficCapture:
+    def __init__(self, interface):
+        self.interface = interface
 
+    def process_packet(self, packet):
+        if IP in packet:
+            ip_layer = packet[IP]
+            src_ip = ip_layer.src
+            dst_ip = ip_layer.dst
+            proto = ip_layer.proto
 
-def packet_handler(packet, iface):
-    """处理捕捉到的数据包并提取和显示详细信息"""
-    if IP in packet:
-        ip_src = packet[IP].src
-        ip_dst = packet[IP].dst
+            if proto == 6:  # TCP协议
+                protocol = "TCP"
+            elif proto == 17:  # UDP协议
+                protocol = "UDP"
+            else:
+                protocol = "Other"
 
-        if packet.haslayer(TCP):
-            proto_type = "TCP"
-        elif packet.haslayer(UDP):
-            proto_type = "UDP"
-        else:
-            proto_type = "Other"
+            traffic_size = len(packet)
 
-        # 提取HTTP/HTTPS数据包
-        if packet.haslayer(HTTPRequest) or packet.haslayer(HTTPResponse):
-            app_proto = "HTTP"
-        else:
-            app_proto = "Other"
+            print(f"Interface: {self.interface}, Source IP: {src_ip}, Destination IP: {dst_ip}, Protocol: {protocol}, Traffic Size: {traffic_size} bytes")
 
-        # 打印格式化输出
-        packet_info = packet.summary()
-        print(
-            f"Interface: {iface}, Source IP: {ip_src}, Destination IP: {ip_dst}, Protocol: {proto_type}, App Protocol: {app_proto}, Packet Info: {packet_info}")
+    def start_capture(self):
+        try:
+            sniff(iface=self.interface, prn=self.process_packet, store=0)
+        except Exception as e:
+            print(f"Error capturing on interface {self.interface}: {e}")
 
-        # 保存数据包为pcap文件
-        wrpcap(f"{iface}_captured_packets.pcap", [packet], append=True)
+def start_capture_on_interface(interface):
+    capture = TrafficCapture(interface)
+    capture.start_capture()
 
+def capture_on_interfaces(interfaces):
+    threads = []
+    for interface in interfaces:
+        thread = threading.Thread(target=start_capture_on_interface, args=(interface,))
+        threads.append(thread)
+        thread.start()
 
-def start_sniffing(interface):
-    """初始化捕捉器并开始捕捉数据包"""
-    print(f"Starting packet capture on interface {interface}...")
-    sniff(iface=interface, prn=lambda packet: packet_handler(packet, interface), store=False)
+    for thread in threads:
+        thread.join()
 
-
-if __name__ == "__main__":
-    # 获取所有网络接口
-    interfaces = get_all_interfaces()
-    print(interfaces)
-
-    start_sniffing("WLAN")
-    # 在每个接口上启动捕捉
-    # for iface in interfaces:
-    #     try:
-    #         start_sniffing(iface)
-    #     except Exception as e:
-    #         print(f"Error starting capture on interface {iface}: {e}")
