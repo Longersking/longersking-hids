@@ -75,11 +75,27 @@
 
         .menu-popover {
         }
-        .info-menu{
+
+        .info-menu {
             display: flex;
             align-items: center;
             justify-content: center;
-            color:white;
+            color: white;
+            width: 200px;
+        }
+
+        .info-menu-list {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .info-menu-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(199, 178, 178, 0.47);
+            width: 90%;
+            margin: 5px;
         }
     </style>
 </head>
@@ -94,8 +110,17 @@
                     width="200"
                     trigger="hover">
                 <div slot="reference" class="info-menu">
-                    <el-avatar :size="size" src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"></el-avatar>
+                    <el-avatar :size="size"
+                               :src="userInfo.avatar" style="margin-right: 10px"></el-avatar>
                     <span>${userInfo.username}</span>
+                </div>
+                <div class="info-menu-list">
+                    <div class="info-menu-item" @click="showInfoDialog()">
+                        修改信息
+                    </div>
+                    <div class="info-menu-item" @click="logout()">
+                        退出登录
+                    </div>
                 </div>
             </el-popover>
         </el-header>
@@ -147,6 +172,19 @@
         <!--            底部区域-->
         <!--        </el-footer>-->
     </el-container>
+    <el-dialog title="修改信息" :visible.sync="infoDialogVisible">
+        <el-form :model="userInfo">
+            <el-form-item label="用户名">
+                <el-input v-model="userInfo.username" placeholder="用户名"></el-input>
+            </el-form-item>
+            <el-form-item label="旧密码">
+                <el-input v-model="userInfo.oldpass" placeholder="用户名"></el-input>
+            </el-form-item>
+            <el-form-item label="新密码">
+                <el-input v-model="userInfo.newpass" placeholder="用户名"></el-input>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
 </div>
 
 <script>
@@ -155,6 +193,7 @@
         el: '#app',
         data: function () {
             return {
+                infoDialogVisible: false,
                 menuList: [
                     {
                         index: 0,
@@ -179,12 +218,26 @@
                                 name: "添加用户",
                                 icon: "el-icon-circle-plus",
                                 url: "/add"
+                            },
+                            {
+                                index: "1-1",
+                                name: "用户列表",
+                                icon: "el-icon-circle-plus",
+                                url: "/user/list"
+                            },
+                            {
+                                index: "1-2",
+                                name: "访问记录",
+                                icon: "el-icon-circle-plus",
+                                url: "/user/log"
                             }
-                        ]
+                        ],
+                        size: 50
                     },
+
                 ],
                 isCollapse: true,
-                nowPageUrl: "/",
+                nowPageUrl: "/home",
                 editableTabsValue: '2',
                 editableTabs: [
                     {
@@ -195,7 +248,7 @@
                 ],
                 tabIndex: 1,
                 maxTab: 10,
-                userInfo:{}
+                userInfo: {},
             }
         },
         async mounted() {
@@ -208,9 +261,16 @@
                 }
             }
             let res = await request.get("/user/userMessage", {}, config)
-            this.userInfo = res
+            if (res !== undefined && res.code >= 0) {
+                this.userInfo = res.data.data
+            } else {
+                window.location.href = "/"
+            }
         },
         methods: {
+            showInfoDialog() {
+                this.infoDialogVisible = true
+            },
             menuChange() {
                 if (this.isCollapse === true) {
                     this.isCollapse = false
@@ -259,8 +319,13 @@
                 this.addTab(this.menuList[idx[0]]['child'][idx[1]])
             },
             tabClick(e) {
-                this.changePage(this.editableTabs[e.index].url)
+                this.chagnePage(this.editableTabs[e.index].url)
+            },
+            logout() {
+                localStorage.clear();
+                window.location.href = "/"
             }
+
         }
     })
 </script>

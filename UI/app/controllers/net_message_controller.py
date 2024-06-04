@@ -97,7 +97,7 @@ def set_more_data(nums = 200):
 # 返回网卡流量
 @net_message_router.get("/network_traffic")
 async def get_network_traffic():
-    return common.dataReturn(1, "Get net message succeed", set_more_data())
+    return common.dataReturn(1, "Get net message succeed", set_more_data(10))
 
 
 

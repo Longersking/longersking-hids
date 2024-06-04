@@ -143,17 +143,18 @@
                             this.flowSecData[data[i]['name']] = [[], []]
                         } else {
                             let time = Date.now()
-                            this.flowData[data[i]['name']][0].unshift([time, data[i]['bytes_recv']])
-                            this.flowData[data[i]['name']][1].unshift([time, data[i]['bytes_sent']])
+                            this.flowData[data[i]['name']][0].push([time, data[i]['bytes_recv']])
+                            this.flowData[data[i]['name']][1].push([time, data[i]['bytes_sent']])
                             if (this.flowData[data[i]['name']][0].length >= 1 && this.flowData[data[i]['name']][1].length >= 1) {
-                                this.flowSecData[data[i]['name']][0].unshift([time, data[i]['bytes_recv'] - this.flowData[data[i]['name']][0][this.flowData[data[i]['name']][0].length-1][1]])
-                                this.flowSecData[data[i]['name']][1].unshift([time, data[i]['bytes_sent'] - this.flowData[data[i]['name']][1][this.flowData[data[i]['name']][1].length-1][1]])
+                                this.flowSecData[data[i]['name']][0].push([time, data[1]['bytes_recv'] - this.flowData[data[i]['name']][0][this.flowData[data[i]['name']][0].length-1][1]])
+                                this.flowSecData[data[i]['name']][1].push([time, data[i]['bytes_sent'] - this.flowData[data[i]['name']][1][this.flowData[data[i]['name']][1].length-1][1]])
+                                console.log(data[i]['bytes_sent'])
                             }else{
-                                this.flowSecData[data[i]['name']][0].unshift([time,0])
-                                this.flowSecData[data[i]['name']][1].unshift([time,0])
+                                this.flowSecData[data[i]['name']][0].push([time,0])
+                                this.flowSecData[data[i]['name']][1].push([time,0])
                             }
                         }
-                        console.log(this.flowData)
+                        // console.log(this.flowData,this.flowSecData)
                         if (this.flowType.indexOf(data[i]['name']) === -1) {
                             this.flowType.unshift(data[i]['name'])
                         }

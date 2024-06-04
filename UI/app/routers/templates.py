@@ -23,3 +23,10 @@ async def add(req: Request):
 @router.get("/home", response_class=HTMLResponse)
 async def add(req: Request):
     return template.TemplateResponse("home.html", context={"request": req})
+
+@router.get("/user/log", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("user/log.html", context={"request": req})
+@router.get("/user/list", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("user/log.html", context={"request": req})

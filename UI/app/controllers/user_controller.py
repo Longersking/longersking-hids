@@ -19,13 +19,14 @@ from sqlalchemy.ext.declarative import declarative_base
 # 注册用户路由
 user_router = APIRouter()
 
+
 # 内部接口调用
 
 # 添加用户
 class UserCreate(BaseModel):
-    username: Union[str,int]
+    username: Union[str, int]
     # email: str
-    password: Union[str,int]
+    password: Union[str, int]
     role: str = "user"
 
 
@@ -46,7 +47,7 @@ async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     # 刷新表
     db.flush(user)
-    return common.dataReturn(1,'添加用户成功',user)
+    return common.dataReturn(1, '添加用户成功', user)
 
 
 # 用户登录
@@ -61,7 +62,8 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expire
     )
-    return common.dataReturn(1,'登录成功',{"access_token": access_token, "token_type": "bearer"})
+    return common.dataReturn(1, '登录成功', {"access_token": access_token, "token_type": "bearer"})
+
 
 # 获取用户信息
 async def get_user(token: str = Depends(oauth2_scheme)) -> User:
@@ -75,15 +77,17 @@ async def get_user(token: str = Depends(oauth2_scheme)) -> User:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
-            raise credentials_exception
+            return common.dataReturn(-1, "未登录")
     except JWTError:
-        raise credentials_exception
+        return common.dataReturn(-2, "tokne验证失败")
+        # raise credentials_exception
 
     db = next(get_db())
     user = db.query(User).filter(User.username == username).first()
     if not user:
-        raise credentials_exception
-    return user
+        # raise credentials_exception
+        return common.dataReturn(-3, "用户不存在")
+    return common.dataReturn(1, "获取成功", user)
 
 
 # 获取当前用户信息
@@ -94,23 +98,22 @@ async def get_current_user(current_user: User = Depends(get_user)):
 # 前端交互接口
 @user_router.get("/userMessage")
 async def get_current_user_message(current_user: User = Depends(get_current_user)):
-    return common.dataReturn(1, 'Get current user message',data=current_user)
+    return common.dataReturn(1, 'Get current user message', data=current_user)
 
 
 # 添加用户
 class UserCreate(BaseModel):
-    username: Union[str,int]
+    username: Union[str, int]
     # email: str
-    password: Union[str,int]
+    password: Union[str, int]
     role: str = "user"
 
 
 @user_router.post("/addUser", status_code=status.HTTP_201_CREATED)
 async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
-
     # 检测用户是否重复
     if db.query(User).filter(User.username == user_data.username).first():
-        return common.dataReturn(0,'User already exists')
+        return common.dataReturn(0, 'User already exists')
 
     # 创建用户并保存到数据库
     user = User(
@@ -123,7 +126,7 @@ async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     # 刷新表
     db.flush(user)
-    return common.dataReturn(1,'Add user succeed',user)
+    return common.dataReturn(1, 'Add user succeed', user)
 
 
 # 用户登录
@@ -136,13 +139,13 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     """
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
-        return common.dataReturn( 0, '用户名或密码错误', user)
+        return common.dataReturn(0, '用户名或密码错误', user)
 
     access_token_expire = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expire
     )
-    return common.dataReturn(1,'Login succeed',{"access_token": access_token, "token_type": "bearer"})
+    return common.dataReturn(1, 'Login succeed', {"access_token": access_token, "token_type": "bearer"})
 
 
 # 更改密码
@@ -168,12 +171,11 @@ async def changePassword(
         db.commit()
         db.refresh(current_user)
 
-        return common.dataReturn(1,msg="ChangePassword succeed")
+        return common.dataReturn(1, msg="ChangePassword succeed")
 
     except Exception as e:
         db.rollback()  # 确保在异常情况下回滚事务
-        return common.dataReturn( 0,msg="Error")
-
+        return common.dataReturn(0, msg="Error")
 
 
 # 删除用户
@@ -185,14 +187,14 @@ async def delete_user(
 ):
     if current_user.role != "admin" or not current_user:
         # raise HTTPException(status_code=403, detail="非法用户越权，已记录日志")
-        return common.dataReturn( 0, msg="Hacker attack,had recorded")
+        return common.dataReturn(0, msg="Hacker attack,had recorded")
     else:
         user = db.query(User).filter(User.username == username).first()
         if not user:
             # raise HTTPException(status_code=404, detail="未找到此用户")
-            return common.dataReturn( 0, msg="Can't find this user!")
+            return common.dataReturn(0, msg="Can't find this user!")
 
         db.delete(user)
         db.commit()
 
-        return common.dataReturn(1,msg="Delete user succeed")
+        return common.dataReturn(1, msg="Delete user succeed")

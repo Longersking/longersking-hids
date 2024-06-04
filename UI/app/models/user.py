@@ -13,5 +13,6 @@ class User(Base):
     disabled = Column(Boolean, default=False)
     hashed_password = Column(String(100), nullable=False)
     role = Column(String(50))
+    avatar = Column(String(1000))
 
 Base.metadata.create_all(bind=engine)

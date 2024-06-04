@@ -64,9 +64,21 @@
                 }
             }
         },
-        mounted(){
-        //     检查是否已经登录
-
+        async mounted() {
+            //     检查是否已经登录
+//     获取用户信息
+            let token = localStorage.getItem("userToken");
+            //     获取信息
+            let config = {
+                headers: {
+                    "authorization": "bearer " + token
+                }
+            }
+            let res = await request.get("/user/userMessage", {}, config)
+            res = res.data
+            if (res !== undefined && res.code >= 0) {
+                window.location.href = "/index"
+            }
         },
         methods: {
             async submit() {
@@ -77,25 +89,25 @@
 
                 //     发起请求
                 let fd = new FormData()
-                fd.append("username",this.form.username)
-                fd.append("password",this.form.password)
+                fd.append("username", this.form.username)
+                fd.append("password", this.form.password)
 
                 let res = await request.post_urlencode("/user/login", fd)
                 if (res.code > 0) {
                     // 储存token
-                    localStorage.setItem("userToken",res.data.access_token)
+                    localStorage.setItem("userToken", res.data.access_token)
                     this.$message({
                         message: res.msg,
                         type: 'success'
                     });
-                //     跳转到首页
-                    setTimeout(()=>{
-                    window.location.href="/index"
-                    },2000)
-                }else{
+                    //     跳转到首页
+                    setTimeout(() => {
+                        window.location.href = "/index"
+                    }, 2000)
+                } else {
                     this.$message({
-                        message:res.msg,
-                        type:"error"
+                        message: res.msg,
+                        type: "error"
                     })
                 }
             },
