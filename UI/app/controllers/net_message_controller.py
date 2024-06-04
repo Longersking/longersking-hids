@@ -101,7 +101,5 @@ async def get_network_traffic():
 
 
 
-
-
 if __name__ == '__main__':
     pprint((generate_random_data()))
