@@ -1,15 +1,9 @@
-import random
-import os
-
 from faker import Faker
 from fastapi import APIRouter
 from pprint import pprint
-from scapy.all import *
 from scapy.layers.inet import *
 
-from typing import Dict,List
-
-from UI.app import common
+from app import common
 
 net_message_router = APIRouter()
 

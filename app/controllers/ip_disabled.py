@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Dict, Any, List
+from fastapi import APIRouter, Depends
+from typing import Dict, Any
 from ..models.database import get_db
 from sqlalchemy.orm import Session
 from ..models.ip_disabled import IpDisabled
@@ -37,7 +37,7 @@ async def get(page:int = 1,db: Session = Depends(get_db)) -> Dict[str, Any]:
     # 将查询结果转换为 Pydantic 模型列表
     ips_list = [DisIpItem(id=ip.id, ip=ip.ip, create_time=str(ip.create_time), operator=ip.operator) for ip in
                 ips_query]
-    return common.dataReturn(1, msg="disabled_ip", data={"data":ips_list,"total":count})
+    return common.dataReturn(1, msg="disabled_ip", data={"data":ips_list, "total":count})
 
 
 @ip_route.post("/addDisabled")
@@ -49,7 +49,7 @@ async def add(data: addIP, db: Session = Depends(get_db)):
         return common.dataReturn(1, "封禁成功")
     except Exception as e:
         db.rollback()
-        return common.dataReturn(-1, "写入数据库失败！",e)
+        return common.dataReturn(-1, "写入数据库失败！", e)
 
 @ip_route.get("/delBlack")
 async def add(id : int |str, db: Session = Depends(get_db)):
@@ -60,4 +60,4 @@ async def add(id : int |str, db: Session = Depends(get_db)):
         return common.dataReturn(1, "解禁成功")
     except Exception as e:
         db.rollback()
-        return common.dataReturn(-1, "解除封禁失败！",str(e))
+        return common.dataReturn(-1, "解除封禁失败！", str(e))

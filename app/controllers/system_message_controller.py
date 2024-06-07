@@ -1,9 +1,8 @@
 from fastapi import APIRouter
 from typing import Dict,Any
-import json
 
 
-from host_detection.sys_monitor import Monitor
+from utils.host_handler.sys_monitor import Monitor
 from .. import common
 
 # 配置路由
@@ -25,7 +24,7 @@ async def cpu_message( ) -> Dict[str, Any]:
 
     cpu_info = m.cpu()
 
-    return common.dataReturn(1,msg="CPU message",data=cpu_info)
+    return common.dataReturn(1, msg="CPU message", data=cpu_info)
 
 
 # 获取当前内存交互信息
@@ -44,7 +43,7 @@ async def mem_message( ) -> Dict[str, Any]:
 
     mem_info = m.mem()
 
-    return common.dataReturn(1,msg="MEM message",data=mem_info)
+    return common.dataReturn(1, msg="MEM message", data=mem_info)
 
 
 # 获取当前交互内存区信息
@@ -63,7 +62,7 @@ async def swap_memory_message( ) -> Dict[str, Any]:
 
     swap_memory_info = m.swap_memory()
 
-    return common.dataReturn(1,msg="SWAP_MEMORY message",data=swap_memory_info)
+    return common.dataReturn(1, msg="SWAP_MEMORY message", data=swap_memory_info)
 
 
 # 获取当前磁盘信息
@@ -82,7 +81,7 @@ async def disk_message( ) -> Dict[str, Any]:
 
     disk_info = m.disk()
 
-    return common.dataReturn(1,msg="DISK message",data=disk_info)
+    return common.dataReturn(1, msg="DISK message", data=disk_info)
 
 
 # 获取当前网卡信息
@@ -101,7 +100,7 @@ async def net_message( ) -> Dict[str, Any]:
 
     net_info = m.net()
 
-    return common.dataReturn(1,msg="NET message",data=net_info)
+    return common.dataReturn(1, msg="NET message", data=net_info)
 
 
 # 获取当前主机用户最近登录信息
@@ -120,7 +119,7 @@ async def logined_users( ) -> Dict[str, Any]:
 
     logined_users = m.logined_users()
 
-    return common.dataReturn(1,msg="LOGINED_USERS",data=logined_users)
+    return common.dataReturn(1, msg="LOGINED_USERS", data=logined_users)
 
 @sys_message_router.get("/load_info")
 async def load_info():
@@ -134,7 +133,7 @@ async def load_info():
     disk = disk['data']
     net = await  net_message()
     net = net['data']
-    return common.dataReturn(1,"负载信息",{
+    return common.dataReturn(1, "负载信息", {
         "cpu":cpu,
         "mem":mem,
         "swap":swap,
