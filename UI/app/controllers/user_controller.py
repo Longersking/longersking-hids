@@ -1,21 +1,22 @@
 # controllers/user_controller.py
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import Union
 
 from jose import jwt, JWTError
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
+from starlette.requests import Request
 
 from utils.security import get_password_hash, create_access_token, verify_password, SECRET_KEY, ALGORITHM, \
     ACCESS_TOKEN_EXPIRE_MINUTES, oauth2_scheme
+from ..models.event import UserLog
 from ..models.user import User
 from ..models.database import get_db
 from .. import common
-
-from sqlalchemy.ext.declarative import declarative_base
-
+from datetime import datetime
 # 注册用户路由
 user_router = APIRouter()
 
@@ -28,6 +29,16 @@ class UserCreate(BaseModel):
     # email: str
     password: Union[str, int]
     role: str = "user"
+    create_time:str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+
+class UserInfo(BaseModel):
+    id: int
+    username: str
+    disabled: int
+    role: str
+    avatar: Union[str, None]
+    create_time: str
 
 
 @user_router.post("/addUser", status_code=status.HTTP_201_CREATED)
@@ -40,7 +51,8 @@ async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
     user = User(
         username=user_data.username,
         hashed_password=get_password_hash(user_data.password),
-        role=user_data.role
+        role=user_data.role,
+        create_time = user_data.create_time
     )
     # 添加表
     db.add(user)
@@ -50,19 +62,36 @@ async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
     return common.dataReturn(1, '添加用户成功', user)
 
 
+async def add_user_log(user_id: int, username: str, ip_address: str, db: Session = Depends(get_db)):
+    login_record = UserLog(uid=user_id, username=username, ip=ip_address, login_time=datetime.utcnow())
+    db.add(login_record)
+    try:
+        db.commit()
+        db.refresh(login_record)
+    except Exception as e:
+        return common.dataReturn(-1, "error", e)
+
+
 # 用户登录
 @user_router.post("/login")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends(),
                                  db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        return common.dataReturn(-1, '用户名或密码错误', user)
+    """
+        表单传输数据
+        x-www-form-urlencoded
+    """
+    ip_address = request.client.host
 
+    user = db.query(User).filter(User.username == form_data.username).first()
+
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        return common.dataReturn(0, '用户名或密码错误', user)
+    res = await add_user_log(user_id=user.id, username=user.username, ip_address=ip_address, db=db)
     access_token_expire = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expire
     )
-    return common.dataReturn(1, '登录成功', {"access_token": access_token, "token_type": "bearer"})
+    return common.dataReturn(1, 'Login succeed', {"access_token": access_token, "token_type": "bearer"})
 
 
 # 获取用户信息
@@ -130,22 +159,11 @@ async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 # 用户登录
-@user_router.post("/login")
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
-                                 db: Session = Depends(get_db)):
-    """
-        表单传输数据
-        x-www-form-urlencoded
-    """
-    user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        return common.dataReturn(0, '用户名或密码错误', user)
-
-    access_token_expire = timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expire
-    )
-    return common.dataReturn(1, 'Login succeed', {"access_token": access_token, "token_type": "bearer"})
+async def get_user_log(user_id: int, username: str, ip_address: str, db: Session = Depends(get_db)):
+    login_record = UserLog(user_id=user_id, username=username, ip_address=ip_address, login_time=datetime.utcnow())
+    db.add(login_record)
+    db.commit()
+    db.refresh(login_record)
 
 
 # 更改密码
@@ -198,3 +216,95 @@ async def delete_user(
         db.commit()
 
         return common.dataReturn(1, msg="Delete user succeed")
+
+
+@user_router.get("/getList", response_model=dict)
+async def getList(page: int = 1, db: Session = Depends(get_db)):
+    userList = db.query(User).order_by(desc(User.id)).limit(10).offset(10 * (page - 1)).all()
+    count = db.query(User).count()
+    user_list = [
+        UserInfo(id=item.id, username=item.username, disabled=item.disabled, create_time=str(item.create_time),
+                 avatar=item.avatar, role=item.role) for item in
+        userList]
+    return common.dataReturn(1, msg="userlist", data={"data": user_list, "total": count})
+
+
+@user_router.get("/delUser")
+async def delUserBtId(uid: int, db: Session = Depends(get_db)):
+    # 通过ID删除用户
+    user = db.query(User).filter(User.id == uid).first()
+    db.delete(user)
+    try:
+        db.commit()
+        return common.dataReturn(1, "删除成功")
+    except Exception as e:
+        return common.dataReturn(-1, "删除失败", str(e))
+
+
+@user_router.get("/disableUser")
+async def delUserBtId(uid: int, db: Session = Depends(get_db)):
+    # 通过ID删除用户
+    user = db.query(User).filter(User.id == uid).first()
+    user.disabled = 1
+    try:
+        db.commit()
+        return common.dataReturn(1, "禁用成功")
+    except Exception as e:
+        return common.dataReturn(-1, "禁用失败", str(e))
+
+
+@user_router.get("/allowUser")
+async def delUserBtId(uid: int, db: Session = Depends(get_db)):
+    # 通过ID删除用户
+    user = db.query(User).filter(User.id == uid).first()
+    user.disabled = 0
+    try:
+        db.commit()
+        return common.dataReturn(1, "解封成功")
+    except Exception as e:
+        return common.dataReturn(-1, "解封失败", str(e))
+
+
+class userInfo(BaseModel):
+    username: str
+    oldpass: str = None
+    avatar: str = None
+    newpass: str = None
+
+
+@user_router.post("/updateInfo")
+async def delUserBtId(info: userInfo, db: Session = Depends(get_db)):
+    # 修改用户信息
+    user = db.query(User).filter(User.username == info.username).first()
+    if info.oldpass != None and info.oldpass != "" and not verify_password(info.oldpass, user.hashed_password):
+        return common.dataReturn(-1, "原密码不正确")
+    else:
+        if info.newpass != None and info.newpass != "":
+            user.hashed_password = get_password_hash(info.newpass)
+
+    if info.avatar != None:
+        user.avatar = info.avatar
+
+    try:
+        db.commit()
+        return common.dataReturn(1, "修改成功！")
+    except Exception as e:
+        return common.dataReturn(-2, "修改失败", str(e))
+
+
+class LogInfo(BaseModel):
+    id: int
+    uid: int
+    ip: str
+    username: str
+    login_time: str
+
+
+@user_router.get("/log",response_model=dict)
+async def getLog(page: int = 1, db: Session = Depends(get_db)):
+    logList = db.query(UserLog).order_by(desc(UserLog.login_time)).limit(10).offset(10 * (page - 1)).all()
+    count = db.query(UserLog).count()
+    log_list = [
+        LogInfo(id=item.id, uid=item.uid,username=item.username, login_time=str(item.login_time),
+                ip=item.ip) for item in logList]
+    return common.dataReturn(1, msg="userloglist", data={"data": log_list, "total": count})

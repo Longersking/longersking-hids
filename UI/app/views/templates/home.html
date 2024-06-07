@@ -94,11 +94,21 @@
                 </div>
             </el-card>
         </el-col>
-        <el-col :span="12">
+        <el-col :span="12" style="height: 400px">
             <el-card>
                 <div class="card-header">
-                    磁盘I/O
+                    登录记录
                 </div>
+                <el-table :default-sort="{prop:'login_time'}" :stripe="true" :data="logData" height="400px">
+                    <el-table-column prop="id" label="id">
+                    </el-table-column>
+                    <el-table-column prop="username" label="用户名">
+                    </el-table-column>
+                    <el-table-column prop="ip" label="ip">
+                    </el-table-column>
+                    <el-table-column prop="login_time" label="登录时间">
+                    </el-table-column>
+                </el-table>
             </el-card>
         </el-col>
     </el-row>
@@ -111,7 +121,23 @@
         el: '#app',
         data: function () {
             return {
-                loadInfo: {},
+                loadInfo: {
+                    cpu:{
+                        percent_avg:0
+                    },
+                    mem:{
+                        used:0
+                    },
+                    disk:{
+                        used:{
+                            used:0
+                        }
+                    },
+                    swap:{
+                        used:0
+                    }
+
+                },
                 interval: null,
                 flowRateType: {},
                 flowType: [],
@@ -120,16 +146,23 @@
                 flowSecData: {},     // 流量瞬时数据
                 nowNet: "",
                 flowTime: [],
+                logData:[]
             }
         },
         mounted() {
             this.getSysInfo()
             this.updateInterval()
+            this.getUserLog()
         },
         updated() {
             this.drawCharts()
         },
         methods: {
+            // 获取用户登录记录
+            async getUserLog(){
+                let res = await request.get("/user/log")
+                this.logData = res.data.data;
+            },
             //     获取系统运行信息
             async getSysInfo() {
                 let res = await request.get("/sys_message/load_info")
@@ -145,10 +178,10 @@
                             let time = Date.now()
                             this.flowData[data[i]['name']][0].push([time, data[i]['bytes_recv']])
                             this.flowData[data[i]['name']][1].push([time, data[i]['bytes_sent']])
-                            if (this.flowData[data[i]['name']][0].length >= 1 && this.flowData[data[i]['name']][1].length >= 1) {
-                                this.flowSecData[data[i]['name']][0].push([time, data[1]['bytes_recv'] - this.flowData[data[i]['name']][0][this.flowData[data[i]['name']][0].length-1][1]])
-                                this.flowSecData[data[i]['name']][1].push([time, data[i]['bytes_sent'] - this.flowData[data[i]['name']][1][this.flowData[data[i]['name']][1].length-1][1]])
-                                console.log(data[i]['bytes_sent'])
+                            if (this.flowData[data[i]['name']][0].length > 1 && this.flowData[data[i]['name']][1].length > 1) {
+                                this.flowSecData[data[i]['name']][0].push([time, data[i]['bytes_recv'] - this.flowData[data[i]['name']][0][this.flowData[data[i]['name']][0].length-2][1]])
+                                this.flowSecData[data[i]['name']][1].push([time, data[i]['bytes_sent'] - this.flowData[data[i]['name']][1][this.flowData[data[i]['name']][1].length-2][1]])
+                                // console.log(data[i]['bytes_sent'])
                             }else{
                                 this.flowSecData[data[i]['name']][0].push([time,0])
                                 this.flowSecData[data[i]['name']][1].push([time,0])

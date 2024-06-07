@@ -82,7 +82,7 @@ def generate_random_data():
         '源端口号': source_port,
         "目的端口号":dest_ip,
         '协议': protocol,
-        '数据包': pack
+        '数据包': str(pack)
     }
 
     return data

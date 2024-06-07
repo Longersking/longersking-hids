@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户列表</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/request.js"></script>
+
+    <style>
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <el-table :data="userData" :default-sort="{prop: '源端口号'}">
+        <el-table-column width="80" prop="id" label="ID" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="username" label="用户名" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="role" label="角色" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="avatar" label="头像">
+            <template slot-scope="scope">
+                <el-avatar :size="50"
+                           :src="scope.row.avatar" style="margin-right: 10px"></el-avatar>
+            </template>
+        </el-table-column>
+        <el-table-column prop="disabled" label="状态">
+            <template slot-scope="scope">
+                <el-tag type="success" v-if="scope.row.disabled == 0">正常</el-tag>
+                <el-tag type="danger" v-else>封禁</el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column prop="create_time" label="注册时间">
+        </el-table-column>
+        <el-table-column
+                fixed="right"
+                label="操作"
+                width="150">
+            <template slot-scope="scope">
+                <el-button @click="handleEdit(scope.row)" type="text" size="small">修改</el-button>
+                <el-button @click="disableUser(scope.row)" type="text" v-if="scope.row.disabled == 0" size="small">
+                    封禁
+                </el-button>
+                <el-button @click="allowUser(scope.row)" type="text" v-else size="small">解封</el-button>
+                <el-button @click="delUser(scope.row)" type="text" size="small">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <el-pagination
+            @current-change="changePage"
+            layout="prev, pager, next"
+            :total="total">
+    </el-pagination>
+    <el-dialog title="修改信息" :visible.sync="infoDialogVisible">
+        <el-form :model="userInfo">
+            <el-form-item label="用户名">
+                <el-input v-model="userInfo.username" placeholder="用户名" disabled=""></el-input>
+            </el-form-item>
+            <el-form-item label="头像地址">
+                <el-input v-model="userInfo.avatar" placeholder="用户名"></el-input>
+            </el-form-item>
+            <el-form-item label="旧密码">
+                <el-input v-model="userInfo.oldpass" placeholder="用户名"></el-input>
+            </el-form-item>
+            <el-form-item label="新密码">
+                <el-input v-model="userInfo.newpass" placeholder="用户名"></el-input>
+            </el-form-item>
+            <el-button type="primary" style="float: right" @click="submitForm">
+                提交
+            </el-button>
+            <div style="clear: both"></div>
+        </el-form>
+    </el-dialog>
+</div>
+
+
+<script type="text/javascript">
+    new Vue({
+        delimiters: ['${', '}'],
+        el: '#app',
+        data: function () {
+            return {
+                userData: [],
+                infoDialogVisible: false,
+                total: 0,
+                userInfo:{}
+            }
+        },
+        async mounted() {
+            await this.getUserList()
+        },
+        methods: {
+            async getUserList() {
+                let res = await request.get("/user/getList")
+                this.userData = res.data.data
+                this.total = Number(res.data.total)
+            },
+            async changePage(e) {
+                let res = await request.get("/user/getList?page=" + e)
+                this.userData = res.data.data
+            },
+            async delUser(row) {
+                let res = await request.get("/user/delUser?uid=" + row.id)
+                if (res.code === 1) {
+                    this.getUserList()
+
+                    this.$message({
+                        type: "success",
+                        message: res.msg
+                    })
+                } else {
+                    this.$message({
+                        type: "error",
+                        message: res.msg
+                    })
+                }
+            },
+            async disableUser(row) {
+                //     禁用用户
+                let res = await request.get("/user/disableUser?uid=" + row.id)
+                if (res.code === 1) {
+                    this.getUserList()
+                    this.$message({
+                        type: "success",
+                        message: res.msg
+                    })
+                } else {
+                    this.$message({
+                        type: "error",
+                        message: res.msg
+                    })
+                }
+            },
+            async allowUser(row) {
+                //     禁用用户
+                let res = await request.get("/user/allowUser?uid=" + row.id)
+                if (res.code === 1) {
+                    this.getUserList()
+                    this.$message({
+                        type: "success",
+                        message: res.msg
+                    })
+                } else {
+                    this.$message({
+                        type: "error",
+                        message: res.msg
+                    })
+                }
+            },
+            async handleEdit(row){
+                this.infoDialogVisible = true
+                this.userInfo={
+                    username : row.username,
+                    oldpass:"",
+                    newpass:"",
+                    avatar:row.avatar
+                }
+            },
+            async submitForm(){
+                let res = await request.post("/user/updateInfo",this.userInfo)
+                if(res.code == 1){
+                    this.$message({
+                        message: res.msg,
+                        type: 'success'
+                    });
+                }else{
+                    this.$message({
+                        message: res.msg,
+                        type: 'error'
+                    });
+                }
+            }
+        }
+    })
+
+</script>
+</body>
+</html>

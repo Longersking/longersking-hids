@@ -103,14 +103,14 @@
 <div id="app">
     <el-container class="app-container">
         <el-header class="header">
-            <div @click="menuChange"><i class="el-icon-menu"></i></div>
+            <div><span @click="menuChange"><i class="el-icon-menu"></i></span><span style="margin-left: 20px;" @click="refresh"><i class="el-icon-refresh"></i></span></div>
             <el-popover
                     class="menu-popover"
                     placement="top-start"
                     width="200"
                     trigger="hover">
                 <div slot="reference" class="info-menu">
-                    <el-avatar :size="size"
+                    <el-avatar :size="50"
                                :src="userInfo.avatar" style="margin-right: 10px"></el-avatar>
                     <span>${userInfo.username}</span>
                 </div>
@@ -162,7 +162,7 @@
                     </template>
                 </el-header>
                 <el-main class="main">
-                    <iframe v-for="frame in editableTabs" v-show="nowPageUrl == frame.url" :src="frame.url"
+                    <iframe v-for="frame in editableTabs" :ref="frame.url" v-show="nowPageUrl == frame.url" :src="frame.url"
                             frameborder="no" border="0" marginwidth="0" marginheight="0"
                             allowtransparency="yes" class="page-content"></iframe>
                 </el-main>
@@ -175,7 +175,10 @@
     <el-dialog title="修改信息" :visible.sync="infoDialogVisible">
         <el-form :model="userInfo">
             <el-form-item label="用户名">
-                <el-input v-model="userInfo.username" placeholder="用户名"></el-input>
+                <el-input v-model="userInfo.username" placeholder="用户名" disabled=""></el-input>
+            </el-form-item>
+            <el-form-item label="头像地址">
+                <el-input v-model="userInfo.avatar" placeholder="用户名"></el-input>
             </el-form-item>
             <el-form-item label="旧密码">
                 <el-input v-model="userInfo.oldpass" placeholder="用户名"></el-input>
@@ -183,6 +186,10 @@
             <el-form-item label="新密码">
                 <el-input v-model="userInfo.newpass" placeholder="用户名"></el-input>
             </el-form-item>
+            <el-button type="primary" style="float: right" @click="submitForm">
+                提交
+            </el-button>
+            <div style="clear: both"></div>
         </el-form>
     </el-dialog>
 </div>
@@ -227,14 +234,34 @@
                             },
                             {
                                 index: "1-2",
-                                name: "访问记录",
+                                name: "登录记录",
                                 icon: "el-icon-circle-plus",
-                                url: "/user/log"
+                                url: "/user/logpage"
+                            }
+
+                        ],
+                        size: 50
+                    },
+                    {
+                        index: 2,
+                        name: "访问控制",
+                        icon: "el-icon-lock",
+                        child: [
+                            {
+                                index: "2-0",
+                                name: "访问记录",
+                                icon: "el-icon-coin",
+                                url: "/ip/log"
+                            },
+                            {
+                                index: "2-1",
+                                name: "封禁列表",
+                                icon: "el-icon-circle-plus",
+                                url: "/disabled_ip"
                             }
                         ],
                         size: 50
                     },
-
                 ],
                 isCollapse: true,
                 nowPageUrl: "/home",
@@ -263,6 +290,8 @@
             let res = await request.get("/user/userMessage", {}, config)
             if (res !== undefined && res.code >= 0) {
                 this.userInfo = res.data.data
+            //     储存用户信息
+                localStorage.setItem("userinfo",JSON.stringify(this.userInfo))
             } else {
                 window.location.href = "/"
             }
@@ -295,11 +324,14 @@
                 this.editableTabsValue = activeName;
                 this.editableTabs = tabs.filter(tab => tab.name !== targetName);
             },
+            refresh(){
+                console.log(this.$refs[this.nowPageUrl][0]);
+                this.$refs[this.nowPageUrl][0].src=this.nowPageUrl
+            },
             changePage(url) {
                 this.nowPageUrl = url
             },
             addTab(item) {
-                console.log(item)
                 for (x of this.editableTabs) {
                     if (item.name === x.name && item.url === x.url) {
                         return false;
@@ -310,6 +342,7 @@
                     name: item.name,
                     url: item.url
                 })
+
             },
             handleMenuChange(index, url) {
                 //     切换iframe
@@ -319,11 +352,25 @@
                 this.addTab(this.menuList[idx[0]]['child'][idx[1]])
             },
             tabClick(e) {
-                this.chagnePage(this.editableTabs[e.index].url)
+                this.changePage(this.editableTabs[e.index].url)
             },
             logout() {
                 localStorage.clear();
                 window.location.href = "/"
+            },
+            async submitForm(){
+                let res = await request.post("/user/updateInfo",this.userInfo)
+                if(res.code == 1){
+                    this.$message({
+                        message: res.msg,
+                        type: 'success'
+                    });
+                }else{
+                    this.$message({
+                        message: res.msg,
+                        type: 'error'
+                    });
+                }
             }
 
         }

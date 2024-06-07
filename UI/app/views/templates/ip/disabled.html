@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>禁用IP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/request.js"></script>
+
+    <style>
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <el-table :data="logData" :default-sort="{prop: '源端口号'}">
+        <el-table-column prop="id" label="ID" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="ip" label="IP" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="operator" label="操作人" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="create_time" label="创建时间">
+        </el-table-column>
+        <el-table-column
+                fixed="right"
+                label="操作"
+                width="100">
+            <template slot-scope="scope">
+                <el-button @click="allowIP(scope.row)" type="text" size="small">解禁</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <el-pagination
+            @current-change="changePage"
+            layout="prev, pager, next"
+            :total="total">
+    </el-pagination>
+</div>
+
+
+<script type="text/javascript">
+    new Vue({
+        delimiters: ['${', '}'],
+        el: '#app',
+        data: function () {
+            return {
+                logData: [],
+                total: 0,
+            }
+        },
+        async mounted() {
+            await this.getUserLog()
+        },
+        methods: {
+            async getUserLog() {
+                let res = await request.get("/ip/disabled")
+                this.logData = res.data.data
+                this.total = Number(res.data.total)
+            },
+            async changePage(e) {
+                let res = await request.get("/ip/disabled?page="+e)
+                this.logData = res.data.data
+            },
+            async allowIP(row) {
+                let res = await request.get("/ip/delBlack?id=" + row.id)
+                if (res.code === 1) {
+                    this.$message({
+                        type: "success",
+                        message: res.msg
+                    })
+                } else {
+                    this.$message({
+                        type: "error",
+                        message: res.msg
+                    })
+                }
+            }
+        }
+    })
+
+</script>
+</body>
+</html>

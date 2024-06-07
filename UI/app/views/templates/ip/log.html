@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录日志</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/request.js"></script>
+
+    <style>
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <el-table :data="logData" :default-sort="{prop: '源端口号'}">
+        <el-table-column prop="协议" label="协议" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="源ip" label="源IP" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="源端口号" label="源端口号" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="目的ip" label="目的IP">
+        </el-table-column>
+        <el-table-column prop="数据包" label="数据包">
+        </el-table-column>
+        <el-table-column
+                fixed="right"
+                label="操作"
+                width="100">
+            <template slot-scope="scope">
+                <el-button @click="disableIP(scope.row)" type="text" size="small">封禁</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <el-pagination
+            @current-change="getUserLog()"
+            layout="prev, pager, next"
+            :total="200">
+    </el-pagination>
+</div>
+
+
+<script type="text/javascript">
+    new Vue({
+        delimiters: ['${', '}'],
+        el: '#app',
+        data: function () {
+            return {
+                logData: []
+            }
+        },
+        async mounted() {
+            await this.getUserLog()
+        },
+        methods: {
+            async getUserLog() {
+                let res = await request.get("/net_message/network_traffic")
+                this.logData = res.data
+            },
+            async disableIP(row){
+            //     获取用户信息
+                let userinfo = JSON.parse(localStorage.getItem("userinfo"))
+                let res = await request.post("/ip/addDisabled",{operator:userinfo.id,ip:row["源ip"]})
+                if(res.code == 1){
+                    this.$message({
+                        type:"success",
+                        message: res.msg
+                    })
+                }else{
+                    this.$message({
+                        type:"error",
+                        message: res.msg
+                    })
+                }
+            }
+        }
+    })
+
+</script>
+</body>
+</html>

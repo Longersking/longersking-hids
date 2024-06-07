@@ -42,7 +42,7 @@ window.request = {
 
     /** post 请求
      * @param  {接口地址} url
-     * @param  {请求参数} data
+     * @param  {{ip: *, operator}} data
      * @param  {参数} config
      */
     post: function(url, data={}, config={}) {
@@ -65,7 +65,7 @@ window.request = {
     },
 /** post 请求
      * @param  {接口地址} url
-     * @param  {请求参数} data
+     * @param  {{ip, operator}} data
      * @param  {参数} config
      */
     post_urlencode: function(url, data={}, config={}) {
