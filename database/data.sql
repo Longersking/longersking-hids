@@ -1,19 +1,24 @@
 -- phpMyAdmin SQL Dump
--- version 4.8.5
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- 主机： localhost
--- 生成日期： 2024-06-07 11:06:53
--- 服务器版本： 5.7.26
--- PHP 版本： 7.3.4
+-- 生成日期： 2024-06-08 20:45:50
+-- 服务器版本： 5.7.44-log
+-- PHP 版本： 7.4.33
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
 --
--- 数据库： `hids_db`
+-- 数据库： `hids`
 --
 
 -- --------------------------------------------------------
@@ -129,7 +134,12 @@ INSERT INTO `user_log` (`id`, `uid`, `ip`, `username`, `login_time`) VALUES
 (9, 1, '127.0.0.1', 'admin', '2024-06-07 02:06:03'),
 (10, 2, '88.111.22.34', 'test', '2024-06-07 10:09:03'),
 (11, 3, '187.90.11.178', 'aaa111', '2024-06-07 10:09:21'),
-(12, 5, '111.78.190.231', 'abc111', '2024-06-07 10:09:37');
+(12, 5, '111.78.190.231', 'abc111', '2024-06-07 10:09:37'),
+(13, 1, '112.28.229.149', 'admin', '2024-06-08 09:09:53'),
+(14, 1, '223.240.142.17', 'admin', '2024-06-08 09:15:25'),
+(15, 1, '223.240.142.17', 'admin', '2024-06-08 09:16:12'),
+(16, 1, '223.240.142.17', 'admin', '2024-06-08 09:16:12'),
+(17, 1, '39.144.38.29', 'admin', '2024-06-08 09:16:23');
 
 --
 -- 转储表的索引
@@ -189,5 +199,9 @@ ALTER TABLE `users`
 -- 使用表AUTO_INCREMENT `user_log`
 --
 ALTER TABLE `user_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

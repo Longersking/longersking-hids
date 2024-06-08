@@ -67,7 +67,7 @@
                     </div>
                     <div class="load-group">
                         <el-progress type="circle" color="red"
-                                     :percentage="Number((loadInfo.swap.used / loadInfo.swap.total *100).toFixed(2))"></el-progress>
+                                     :percentage="loadInfo.swap.total >0.01 ? (loadInfo.swap.used / loadInfo.swap.total *100).toFixed(2) : 0"></el-progress>
                         <span style="padding: 5px">
                             SWAP
                         </span></div>
