@@ -2,9 +2,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from ..config import mysql_username,mysql_password
+from ..config import mysql_username,mysql_password,mysql_name
 # 数据库连接字符串
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{mysql_username}:{mysql_password}@localhost:3306/hids_db"
+SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{mysql_username}:{mysql_password}@localhost:3306/{mysql_name}"
 
 # 创建数据库引擎
 engine = create_engine(SQLALCHEMY_DATABASE_URL,pool_pre_ping=True)

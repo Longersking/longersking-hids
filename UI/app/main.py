@@ -10,7 +10,7 @@ from UI.app.routers import templates
 app = FastAPI()
 
 # 挂载静态资源
-app.mount("/static", StaticFiles(directory="app/static"))
+app.mount("/static", StaticFiles(directory="UI/app/static"))
 
 # 注册路由
 app.include_router(user_router, prefix="/user")

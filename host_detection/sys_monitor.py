@@ -1,7 +1,7 @@
 import psutil
 import time
 from pprint import pprint
-from datetime import  datetime
+from datetime import datetime
 # 定义一个专门用于获取系统信息的类
 class Monitor(object):
     # 单位换算
