@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from pprint import pprint
 from scapy.layers.inet import *
 
-from app import common
+from .. import common
 
 net_message_router = APIRouter()
 

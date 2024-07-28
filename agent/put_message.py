@@ -1,15 +1,14 @@
-from fastapi import APIRouter
+import asyncio
+import websockets
+import json
 from typing import Dict,Any
 
 
-from utils.host_handler.sys_monitor import Monitor
-from .. import common
+from sys_monitor import Monitor
+from agent import common
 
-# 配置路由
-sys_message_router= APIRouter()
 
 # 获取当前cpu信息
-@sys_message_router.get("/cpu")
 async def cpu_message( ) -> Dict[str, Any]:
     """
         获取当前 CPU 信息的异步接口。
@@ -29,7 +28,7 @@ async def cpu_message( ) -> Dict[str, Any]:
 
 
 # 获取当前内存交互信息
-@sys_message_router.get("/mem")
+
 async def mem_message( ) -> Dict[str, Any]:
     """
         获取当前 内存 信息的异步接口。
@@ -48,7 +47,6 @@ async def mem_message( ) -> Dict[str, Any]:
 
 
 # 获取当前交互内存区信息
-@sys_message_router.get("/swap_memory")
 async def swap_memory_message( ) -> Dict[str, Any]:
     """
         获取当前 交互分区 信息的异步接口。
@@ -67,7 +65,6 @@ async def swap_memory_message( ) -> Dict[str, Any]:
 
 
 # 获取当前磁盘信息
-@sys_message_router.get("/disk")
 async def disk_message( ) -> Dict[str, Any]:
     """
         获取当前 磁盘 信息的异步接口。
@@ -86,7 +83,7 @@ async def disk_message( ) -> Dict[str, Any]:
 
 
 # 获取当前网卡信息
-@sys_message_router.get("/net")
+
 async def net_message( ) -> Dict[str, Any]:
     """
         获取当前 网卡 信息的异步接口。
@@ -105,7 +102,6 @@ async def net_message( ) -> Dict[str, Any]:
 
 
 # 获取当前主机用户最近登录信息
-@sys_message_router.get("/logined_users")
 async def logined_users( ) -> Dict[str, Any]:
     """
         获取当前 主机用户登录 信息的异步接口。
@@ -122,7 +118,6 @@ async def logined_users( ) -> Dict[str, Any]:
 
     return common.dataReturn(1, msg="LOGINED_USERS", data=logined_users)
 
-@sys_message_router.get("/load_info")
 async def load_info():
     cpu = await cpu_message()
     cpu = cpu['data']
@@ -142,9 +137,13 @@ async def load_info():
         "net":net
     })
 
+async def report_system_info(uri):
+    async with websockets.connect(uri) as websocket:
+        while True:
+            system_info = await load_info()
+            await websocket.send(json.dumps(system_info))
+            await asyncio.sleep(10)  # 每10秒发送一次系统信息
 
-
-
-
-
-
+if __name__ == "__main__":
+    server_uri = "ws://192.168.100.102:8004/test/load_info"  # 替换为实际服务器的IP和端口
+    asyncio.get_event_loop().run_until_complete(report_system_info(server_uri))

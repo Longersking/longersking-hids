@@ -11,8 +11,8 @@ mysql_port = "3306"
 mysql_db = "hids_db"
 
 # HOST
-ip = "127.0.0.1"
-port = 8003
+ip = "0.0.0.0"
+port = 8004
 
 
 # 路径
