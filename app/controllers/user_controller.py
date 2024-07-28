@@ -1,9 +1,9 @@
 # controllers/user_controller.py
-from datetime import timedelta, datetime
+from datetime import timedelta
 from typing import Union
 
 from jose import jwt, JWTError
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
