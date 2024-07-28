@@ -1,0 +1,193 @@
+{
+  "main": {
+    "id": "d35c4b5ba1922677",
+    "type": "split",
+    "children": [
+      {
+        "id": "7559adc2eba31f45",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "83fb4f1da1d8c598",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "详细设计/网络监控模块.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "80533ae9d41b6f94",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.6.2"
+              }
+            }
+          },
+          {
+            "id": "775cdd90718b889f",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.6.3"
+              }
+            }
+          }
+        ],
+        "currentTab": 2
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9055e247589c3d7b",
+    "type": "split",
+    "children": [
+      {
+        "id": "984e410bb4228c3c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "677e34e69b9908e6",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "45f35749dc4b5a7d",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "03515dd3d15186ea",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "341511f8dfd47cda",
+    "type": "split",
+    "children": [
+      {
+        "id": "2eea40ecaa32497e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d158c7bb3ac7f4c4",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "详细设计/网络监控模块.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "f2a86e28bebc0910",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "详细设计/网络监控模块.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "13a3a8a17f44a7dd",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "11b001ec8d9358a4",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "详细设计/网络监控模块.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false
+    }
+  },
+  "active": "775cdd90718b889f",
+  "lastOpenFiles": [
+    "~WRL2890.tmp",
+    "~WRD2870.tmp",
+    "~WRL2628.tmp",
+    "~WRD2612.tmp",
+    "~WRL0011.tmp",
+    "~WRD4083.tmp",
+    "~WRL3224.tmp",
+    "~WRD3208.tmp",
+    "~WRL2294.tmp",
+    "~WRD2271.tmp",
+    "~WRL2644.tmp",
+    "详细设计/用户界面和报告模块.md",
+    "详细设计/主机级检测模块.md",
+    "详细设计/事件响应模块.md",
+    "设计文档/用户界面和报告模块.md",
+    "设计架构.md",
+    "需求分析.md",
+    "总体设计.md",
+    "详细设计/检测引擎模块.md",
+    "详细设计/数据存储和管理模块.md"
+  ]
+}
