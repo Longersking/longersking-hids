@@ -2,7 +2,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from config import mysql_username,mysql_password,mysql_host,mysql_port,mysql_db
+from ..config import mysql_username,mysql_password,mysql_host,mysql_port,mysql_db
+
+
 # 数据库连接字符串
 SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{mysql_username}:{mysql_password}@{mysql_host}:{mysql_port}/{mysql_db}"
 
@@ -14,4 +16,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # 基础模型
 Base = declarative_base()
+
+Base.metadata.create_all(bind=engine)
+
 

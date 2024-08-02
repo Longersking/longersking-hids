@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 router = APIRouter()
-template = Jinja2Templates(r"UI/app/views/templates")
+template = Jinja2Templates(r"app/views/templates")
 
 @router.get("/")
 async def root(req: Request):
@@ -32,6 +32,9 @@ async def log(req: Request):
 async def log(req: Request):
     return template.TemplateResponse("ip/disabled.html", context={"request": req})
 
+
+
+# 用户路由
 @router.get("/user/list", response_class=HTMLResponse)
 async def log(req: Request):
     return template.TemplateResponse("user/list.html", context={"request": req})
@@ -39,3 +42,8 @@ async def log(req: Request):
 @router.get("/user/logpage", response_class=HTMLResponse)
 async def log(req: Request):
     return template.TemplateResponse("user/log.html", context={"request": req})
+
+# 网络模块
+@router.get("/network/monitor", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("network/monitor.html", context={"request": req})
