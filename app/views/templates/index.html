@@ -103,7 +103,9 @@
 <div id="app">
     <el-container class="app-container">
         <el-header class="header">
-            <div><span @click="menuChange"><i class="el-icon-menu"></i></span><span style="margin-left: 20px;" @click="refresh"><i class="el-icon-refresh"></i></span></div>
+            <div><span @click="menuChange"><i class="el-icon-menu"></i></span><span style="margin-left: 20px;"
+                                                                                    @click="refresh"><i
+                    class="el-icon-refresh"></i></span></div>
             <el-popover
                     class="menu-popover"
                     placement="top-start"
@@ -162,7 +164,8 @@
                     </template>
                 </el-header>
                 <el-main class="main">
-                    <iframe v-for="frame in editableTabs" :ref="frame.url" v-show="nowPageUrl == frame.url" :src="frame.url"
+                    <iframe v-for="frame in editableTabs" :ref="frame.url" v-show="nowPageUrl == frame.url"
+                            :src="frame.url"
                             frameborder="no" border="0" marginwidth="0" marginheight="0"
                             allowtransparency="yes" class="page-content"></iframe>
                 </el-main>
@@ -201,6 +204,7 @@
         data: function () {
             return {
                 infoDialogVisible: false,
+                // Todo 修复导航栏切换的问题。
                 menuList: [
                     {
                         index: 0,
@@ -262,6 +266,20 @@
                         ],
                         size: 50
                     },
+                    {
+                        index: 3,
+                        name: "网络监控",
+                        icon: "el-icon-view",
+                        child: [
+                            {
+                                index: "3-0",
+                                name: "监测大屏",
+                                icon: "el-icon-c-scale-to-original",
+                                url: "/network/monitor"
+                            },
+                        ],
+                        size: 50
+                    },
                 ],
                 isCollapse: true,
                 nowPageUrl: "/home",
@@ -290,8 +308,8 @@
             let res = await request.get("/user/userMessage", {}, config)
             if (res !== undefined && res.code >= 0) {
                 this.userInfo = res.data.data
-            //     储存用户信息
-                localStorage.setItem("userinfo",JSON.stringify(this.userInfo))
+                //     储存用户信息
+                localStorage.setItem("userinfo", JSON.stringify(this.userInfo))
             } else {
                 window.location.href = "/"
             }
@@ -324,9 +342,9 @@
                 this.editableTabsValue = activeName;
                 this.editableTabs = tabs.filter(tab => tab.name !== targetName);
             },
-            refresh(){
+            refresh() {
                 console.log(this.$refs[this.nowPageUrl][0]);
-                this.$refs[this.nowPageUrl][0].src=this.nowPageUrl
+                this.$refs[this.nowPageUrl][0].src = this.nowPageUrl
             },
             changePage(url) {
                 this.nowPageUrl = url
@@ -358,14 +376,14 @@
                 localStorage.clear();
                 window.location.href = "/"
             },
-            async submitForm(){
-                let res = await request.post("/user/updateInfo",this.userInfo)
-                if(res.code == 1){
+            async submitForm() {
+                let res = await request.post("/user/updateInfo", this.userInfo)
+                if (res.code == 1) {
                     this.$message({
                         message: res.msg,
                         type: 'success'
                     });
-                }else{
+                } else {
                     this.$message({
                         message: res.msg,
                         type: 'error'
