@@ -28,7 +28,7 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-@test_router.websocket("/load_info")
+@test_router.websocket("/sys_info")
 async def cpu_message(websocket: WebSocket):
     await manager.connect(websocket)
     try:
@@ -39,4 +39,24 @@ async def cpu_message(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+@test_router.websocket("/files_info")
+async def files_message(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            files_info = await websocket.receive_text()  # 等待客户端的请求信息
+            print(files_info)
+            await manager.send_personal_message(common.dataReturn(1, msg="file message", data=files_info), websocket)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
+@test_router.websocket("/processes_monitor")
+async def files_message(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            process_info = await websocket.receive_text()  # 等待客户端的请求信息
+            print(process_info)
+            await manager.send_personal_message(common.dataReturn(1, msg="process message", data=process_info), websocket)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)

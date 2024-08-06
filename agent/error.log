@@ -1,0 +1,9 @@
+2024-08-06 21:04:29,559 - ERROR - Unhandled exception in monitor_sys: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+2024-08-06 21:06:42,184 - ERROR - close status: 1011
+2024-08-06 21:09:00,150 - ERROR - Unhandled exception in send_data: Handshake status 403 Forbidden -+-+- {'date': 'Tue, 06 Aug 2024 13:09:00 GMT', 'content-length': '0', 'content-type': 'text/plain', 'connection': 'close'} -+-+- b''
+2024-08-06 21:09:00,151 - ERROR - Unhandled exception in on_created: Handshake status 403 Forbidden -+-+- {'date': 'Tue, 06 Aug 2024 13:09:00 GMT', 'content-length': '0', 'content-type': 'text/plain', 'connection': 'close'} -+-+- b''
+2024-08-06 21:09:00,151 - ERROR - Unhandled exception in dispatch: Handshake status 403 Forbidden -+-+- {'date': 'Tue, 06 Aug 2024 13:09:00 GMT', 'content-length': '0', 'content-type': 'text/plain', 'connection': 'close'} -+-+- b''
+2024-08-06 21:13:53,210 - ERROR - Unhandled exception in monitor_sys: Handshake status 403 Forbidden -+-+- {'date': 'Tue, 06 Aug 2024 13:13:53 GMT', 'content-length': '0', 'content-type': 'text/plain', 'connection': 'close'} -+-+- b''
+2024-08-06 21:14:41,459 - ERROR - Unhandled exception in send_data: Handshake status 403 Forbidden -+-+- {'date': 'Tue, 06 Aug 2024 13:14:41 GMT', 'content-length': '0', 'content-type': 'text/plain', 'connection': 'close'} -+-+- b''
+2024-08-06 21:14:41,460 - ERROR - Unhandled exception in on_modified: Handshake status 403 Forbidden -+-+- {'date': 'Tue, 06 Aug 2024 13:14:41 GMT', 'content-length': '0', 'content-type': 'text/plain', 'connection': 'close'} -+-+- b''
+2024-08-06 21:14:41,460 - ERROR - Unhandled exception in dispatch: Handshake status 403 Forbidden -+-+- {'date': 'Tue, 06 Aug 2024 13:14:41 GMT', 'content-length': '0', 'content-type': 'text/plain', 'connection': 'close'} -+-+- b''

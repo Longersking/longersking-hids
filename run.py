@@ -1,8 +1,6 @@
 # start.py
 import uvicorn
 
-
-
 from app import create_app
 from config import ip,port
 
