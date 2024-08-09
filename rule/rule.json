@@ -1,0 +1,25 @@
+{
+    "rules": [
+        {
+            "id": 1,
+            "pattern": ":${%23a%3dnew%20java.lang.ProcessBuilder(new%20java.lang.String[]{%22whoami%22}).start().getInputStream(),%23b%3dnew%http://20java.io.InputStreamReader(%23a),%23c%3dnew%http://20java.io.BufferedReader(%23b),%23d%3dnew%20char[51020],%23c.read(%23d),%23screen%3d%23context.get(%27com.opensymphony.xwork2.dispatcher.HttpServletResponse%27).getWriter(),%23screen.println(%23d),%23screen.close()}%22%3Etest.action?redirect:${%23a%3dnew%20java.lang.ProcessBuilder(new%20java.lang.String[]{%22test%22}).start().getInputStream(),%23b%3dnew%http://20java.io.InputStreamReader(%23a),%23c%3dnew%20java",
+            "description": "Apache Struts2 rce ",
+            "severity": "high",
+            "enabled": true
+        },
+        {
+            "id": 2,
+            "pattern": "-extractvalue(1,concat(0x5c,database()))-",
+            "description": "sql attack",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 3,
+            "pattern": "/safety/ping.htm",
+            "description": "unauthorized access",
+            "severity": "low",
+            "enabled": true
+        }
+    ]
+}
