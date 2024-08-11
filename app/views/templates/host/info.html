@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主机状态监控</title>
+    <link rel="stylesheet" href="/static/css/animate.min.css">
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/echarts.js"></script>
+    <style>
+        .card-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .detail {
+            position: absolute;
+            top: 90%; /* 更接近进度条 */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+            border-radius: 4px;
+            min-width: 300px;
+            padding: 10px; /* 减少填充 */
+            z-index: 10;
+            display: none;
+            font-size: 12px; /* 调整字体大小 */
+            line-height: 1.4; /* 调整行高 */
+        }
+
+        .card:hover .detail {
+            display: block;
+        }
+
+        .percentage-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .card {
+            text-align: center;
+            padding: 10px; /* 减少填充 */
+            position: relative;
+            font-size: 14px; /* 调整字体大小 */
+        }
+
+        .card .el-progress {
+            margin-bottom: 5px; /* 减少间隙 */
+        }
+
+        .status-card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+            padding: 15px; /* 减少填充 */
+            margin-bottom: 10px; /* 减少间隙 */
+            width: 100%;
+        }
+
+        .status-title {
+            margin: 0;
+            font-size: 18px; /* 调整字体大小 */
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .status-divider {
+            margin: 5px 0; /* 减少间隙 */
+            border: none;
+            border-top: 1px solid #e4e4e4;
+        }
+
+        .card-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse .
+        }
+
+        th, td {
+            border: 1px solid #e4e4e4;
+            padding: 8px;
+            text-align: left .
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-select v-model="selectedHost" placeholder="选择主机" @change="fetchHostData">
+        <el-option
+                v-for="host in hosts"
+                :key="host.host_id"
+                :label="host.host_ip"
+                :value="host.host_ip">
+        </el-option>
+    </el-select>
+
+    <div class="card-container">
+        <div class="status-card">
+            <h3 class="status-title">状态</h3>
+            <hr class="status-divider">
+            <div class="card-container">
+                <div class="card" v-for="(metric, index) in metrics" :key="index" @mouseover="showDetail(metric.name)"
+                     @mouseleave="hideDetail">
+                    <el-progress
+                            type="circle"
+                            :percentage="Number(metric.percentage.toFixed(2))"
+                            :show-text="true"
+                            :stroke-width="18"
+                            :color="metric.color">
+                        <div class="percentage-text" slot="default">[[ Number(metric.percentage).toFixed(2) ]]%</div>
+                    </el-progress>
+                    <p>[[ metric.name ]]</p>
+                    <p>[[ metric.value ]]</p>
+                    <div class="detail" v-show="activeDetail === metric.name" @mouseover="keepDetail(metric.name)"
+                         @mouseleave="hideDetail">
+                        <h4>[[ metric.name ]] 详细信息</h4>
+                        <div v-if="metric.name === '负载状态'">
+                            <p>活跃进程数: [[ hostData.process_info.active_process_count ]]</p>
+                            <p>总进程数: [[ hostData.process_info.total_process_count ]]</p>
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>进程名称</th>
+                                    <th>PID</th>
+                                    <th>CPU占用率</th>
+                                    <th>内存占用率</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="process in hostData.process_info.top_10_processes" :key="process.pid">
+                                    <td>[[ process.name ]]</td>
+                                    <td>[[ process.pid ]]</td>
+                                    <td>[[ process.cpu_percent.toFixed(2) ]]%</td>
+                                    <td>[[ process.memory_percent.toFixed(2) ]]%</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="metric.name === 'CPU使用率'">
+                            <p>平均CPU占用率: [[ hostData.cpu.percent_avg.toFixed(2) ]]%</p>
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>CPU核心</th>
+                                    <th>占用率</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="(percent, index) in hostData.cpu.percent_per" :key="index">
+                                    <td>核心 [[ index + 1 ]]</td>
+                                    <td>[[ percent.toFixed(2) ]]%</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="metric.name === '内存使用率'">
+                            <p>已用内存: [[ hostData.mem.used.toFixed(2) ]] GB</p>
+                            <p>总内存: [[ hostData.mem.total.toFixed(2) ]] GB</p>
+                            <p>可用内存: [[ hostData.mem.free.toFixed(2) ]] GB</p>
+                            <p>内存占用率: [[ hostData.mem.percent.toFixed(2) ]]%</p>
+                        </div>
+
+                        <div v-if="metric.name === '磁盘使用率'">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>磁盘</th>
+                                    <th>已用空间</th>
+                                    <th>总空间</th>
+                                    <th>使用率</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="disk in hostData.disk" :key="disk.device">
+                                    <td>[[ disk.device ]]</td>
+                                    <td>[[ disk.used.used.toFixed(2) ]] GB</td>
+                                    <td>[[ disk.used.total.toFixed(2) ]] GB</td>
+                                    <td>[[ disk.used.percent.toFixed(2) ]]%</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="charts">
+        <div id="network-chart" style="width: 48%; height: 300px; display: inline-block;"></div>
+        <div id="disk-io-chart" style="width: 48%; height: 300px; display: inline-block;"></div>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                hosts: [],  // 主机列表
+                selectedHost: '',
+                hostData: {
+                    logined_users: [],
+                    cpu: {
+                        percent_avg: 0,
+                        percent_per: []
+                    },
+                    mem: {
+                        used: 0,
+                        total: 0,
+                        free: 0,
+                        percent: 0
+                    },
+                    disk: [],
+                    net: [],
+                    traffic: {
+                        total_sent: [],
+                        total_received: [],
+                        protocol_sizes: {
+                            TCP: [],
+                            UDP: []
+                        }
+                    },
+                    diskIoStats: {
+                        readRates: [],
+                        writeRates: []
+                    },
+                    process_info: {
+                        active_process_count: 0,
+                        total_process_count: 0
+                    }
+                },  // 当前主机数据
+                metrics: [
+                    {name: '负载状态', percentage: 0, color: '#f56c6c', value: '运行流畅'},
+                    {name: 'CPU使用率', percentage: 0, color: '#409EFF', value: '8 核心'},
+                    {name: '内存使用率', percentage: 0, color: '#67c23a', value: '5202 / 15363 (MB)'},
+                    {name: '磁盘使用率', percentage: 0, color: '#e6a23c', value: '76.35G / 196.73G'}
+                ],
+                activeDetail: ''
+            };
+        },
+        methods: {
+            async fetchHosts() {
+                const response = await axios.get('/api/host/get');
+                this.hosts = response.data.data;  // 假设返回的数据在 data 字段中
+                if (this.hosts.length > 0) {
+                    // 获取 URL 参数中的 IP
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const ip = urlParams.get('ip');
+                    this.selectedHost = ip ? ip : this.hosts[0].host_ip;
+                    this.fetchHostData();
+                }
+            },
+            fetchHostData() {
+                // 重置图表数据
+                this.hostData.traffic.total_sent = [];
+                this.hostData.traffic.total_received = [];
+                this.hostData.traffic.protocol_sizes.TCP = [];
+                this.hostData.traffic.protocol_sizes.UDP = [];
+                this.hostData.diskIoStats.readRates = [];
+                this.hostData.diskIoStats.writeRates = [];
+
+                // 设置 WebSocket 连接
+                this.setupWebSocket();
+            },
+            setupWebSocket() {
+                const socket = new WebSocket(`ws://121.43.138.234:8003/ws?client_type=web&ip=${this.selectedHost}`);
+                socket.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    if (message.ip === this.selectedHost || !message.ip) {
+                        if (message.type === 'system_load') {
+                            this.updateSystemLoad(message.data);
+                        } else if (message.type === 'traffic_stats') {
+                            this.updateTrafficStats(message.data);
+                        }
+                    }
+                };
+            },
+            updateSystemLoad(data) {
+                const parsedData = JSON.parse(data);
+                this.hostData.cpu = parsedData.cpu;
+                this.hostData.mem = parsedData.mem;
+                this.hostData.disk = parsedData.disk;
+                this.hostData.net = parsedData.net;
+                this.hostData.process_info = parsedData.process_info;
+
+                // 更新进度条的值和百分比
+                this.metrics[0].percentage = (this.hostData.process_info.active_process_count / this.hostData.process_info.total_process_count) * 100;
+                this.metrics[0].value = `${this.hostData.process_info.active_process_count} / ${this.hostData.process_info.total_process_count}`;
+                this.metrics[1].percentage = this.hostData.cpu.percent_avg;
+                this.metrics[1].value = `${this.hostData.cpu.num_logic} 核心`;
+                this.metrics[2].percentage = this.hostData.mem.percent;
+                this.metrics[2].value = `${this.hostData.mem.used} / ${this.hostData.mem.total} (GB)`;
+                this.metrics[3].percentage = this.hostData.disk[0].used.percent;
+                this.metrics[3].value = `${this.hostData.disk[0].used.used}G / ${this.hostData.disk[0].used.total}G`;
+
+                // 更新磁盘IO数据
+                this.hostData.diskIoStats.readRates.push(this.hostData.disk[0].io.read_mb_s);
+                this.hostData.diskIoStats.writeRates.push(this.hostData.disk[0].io.write_mb_s);
+
+                this.renderCharts();
+            },
+            updateTrafficStats(data) {
+                const parsedData = JSON.parse(data);
+                this.hostData.traffic.total_sent.push(parsedData.total_sent);
+                this.hostData.traffic.total_received.push(parsedData.total_received);
+                this.hostData.traffic.protocol_sizes.TCP.push(parsedData.protocol_sizes.TCP);
+                this.hostData.traffic.protocol_sizes.UDP.push(parsedData.protocol_sizes.UDP);
+
+                this.renderCharts();
+            },
+            showDetail(metricName) {
+                this.activeDetail = metricName;
+            },
+            hideDetail() {
+                this.activeDetail = '';
+            },
+            keepDetail(metricName) {
+                this.activeDetail = metricName;
+            },
+            renderCharts() {
+                // 网络流量图表
+                const networkChart = echarts.init(document.getElementById('network-chart'));
+                const networkOption = {
+                    title: {text: '网络流量统计'},
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            let result = '';
+                            params.forEach(function (item) {
+                                result += `${item.seriesName}: ${item.data} MB<br>`;
+                            });
+                            return result;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: new Array(this.hostData.traffic.total_sent.length).fill(0).map((_, index) => index)
+                    },
+                    yAxis: {type: 'value', name: 'MB'},
+                    series: [
+                        {
+                            name: '发送流量',
+                            type: 'line',
+                            smooth: true,
+                            areaStyle: {color: 'rgba(0, 136, 212, 0.2)'},
+                            itemStyle: {color: 'rgba(0, 136, 212, 0.6)'},
+                            data: this.hostData.traffic.total_sent || []
+                        },
+                        {
+                            name: '接收流量',
+                            type: 'line',
+                            smooth: true,
+                            areaStyle: {color: 'rgba(219, 50, 51, 0.2)'},
+                            itemStyle: {color: 'rgba(219, 50, 51, 0.6)'},
+                            data: this.hostData.traffic.total_received || []
+                        },
+                        {
+                            name: 'TCP',
+                            type: 'line',
+                            smooth: true,
+                            areaStyle: {color: 'rgba(46, 204, 113, 0.2)'},
+                            itemStyle: {color: 'rgba(46, 204, 113, 0.6)'},
+                            data: this.hostData.traffic.protocol_sizes.TCP || []
+                        },
+                        {
+                            name: 'UDP',
+                            type: 'line',
+                            smooth: true,
+                            areaStyle: {color: 'rgba(241, 196, 15, 0.2)'},
+                            itemStyle: {color: 'rgba(241, 196, 15, 0.6)'},
+                            data: this.hostData.traffic.protocol_sizes.UDP || []
+                        }
+                    ]
+                };
+                networkChart.setOption(networkOption);
+
+                // 磁盘IO图表
+                const diskIoChart = echarts.init(document.getElementById('disk-io-chart'));
+                const diskIoOption = {
+                    title: {text: '实时磁盘IO'},
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            let result = '';
+                            params.forEach(function (item) {
+                                result += `${item.seriesName}: ${item.data} MB/s<br>`;
+                            });
+                            return result;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: new Array(this.hostData.diskIoStats.readRates.length).fill(0).map((_, index) => index)
+                    },
+                    yAxis: {type: 'value'},
+                    series: [
+                        {
+                            name: '读速率',
+                            type: 'line',
+                            smooth: true,
+                            areaStyle: {color: 'rgba(0, 136, 212, 0.2)'},
+                            itemStyle: {color: 'rgba(0, 136, 212, 0.6)'},
+                            data: this.hostData.diskIoStats.readRates || []
+                        },
+                        {
+                            name: '写速率',
+                            type: 'line',
+                            smooth: true,
+                            areaStyle: {color: 'rgba(219, 50, 51, 0.2)'},
+                            itemStyle: {color: 'rgba(219, 50, 51, 0.6)'},
+                            data: this.hostData.diskIoStats.writeRates || []
+                        }
+                    ]
+                };
+                diskIoChart.setOption(diskIoOption);
+            }
+        },
+        mounted() {
+            this.fetchHosts();  // 页面加载时获取主机列表
+        }
+    });
+</script>
+</body>
+</html>

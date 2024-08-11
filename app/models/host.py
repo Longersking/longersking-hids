@@ -1,51 +1,22 @@
-from sqlalchemy.dialects.mysql import BIGINT, DECIMAL, DATE, TIME, DATETIME  # 导入字段
-from sqlalchemy import Column  # 字段
-from .base import Base, engine
+from sqlalchemy import Column, Integer, String, ForeignKey, TIMESTAMP, DECIMAL
+from sqlalchemy.orm import relationship
+from .base import Base
 
 
-# """
-# id主键
-# percent使用率
-# total总量
-# used使用量
-# free剩余量
-# create_date 创建日期
-# create_time 创建时间
-# create_dt 创建日期时间
-# """
-# 内存
-class Mem(Base):
-    __tablename__ = "mem"  # 指定表名
-    id = Column(BIGINT, primary_key=True)
-    percent = Column(DECIMAL(6, 2))  # 保留6位有效数字，保留两位小数
-    total = Column(DECIMAL(8, 2))
-    used = Column(DECIMAL(8, 2))
-    free = Column(DECIMAL(8, 2))
-    create_date = Column(DATE)
-    create_time = Column(TIME)
-    create_dt = Column(DATETIME)
-
-# 交换分区
-class SwapPartition(Base):
-    __tablename__ = "swap_partition"  # 指定表名
-    id = Column(BIGINT, primary_key=True)
-    percent = Column(DECIMAL(6, 2))  # 保留6位有效数字，保留两位小数
-    total = Column(DECIMAL(8, 2))
-    used = Column(DECIMAL(8, 2))
-    free = Column(DECIMAL(8, 2))
-    create_date = Column(DATE)
-    create_time = Column(TIME)
-    create_dt = Column(DATETIME)
-
-
-# cpu模型
 class Host(Base):
-    __tablename__ = "cpu"  # 指定表名
-    id = Column(BIGINT, primary_key=True)
-    percent = Column(DECIMAL(6, 2))  # 保留6位有效数字，保留两位小数
-    create_date = Column(DATE)
-    create_time = Column(TIME)
-    create_dt = Column(DATETIME)
+    __tablename__ = 'host_list'
+
+    host_id = Column(Integer, primary_key=True, autoincrement=True)
+    host_ip = Column(String(45), nullable=False)
+    operating_system = Column(String(100), nullable=False)
+    alias = Column(String(100))
+    create_time = Column(TIMESTAMP, server_default='CURRENT_TIMESTAMP')
+    status = Column(String(20), default='offline')
+    cpu_cores = Column(Integer)
+    total_memory_gb = Column(DECIMAL(10, 2))
+    total_disk_space_gb = Column(DECIMAL(10, 2))
+    network_bandwidth_mbps = Column(DECIMAL(10, 2))
+    last_update = Column(TIMESTAMP, server_default='CURRENT_TIMESTAMP', onupdate='CURRENT_TIMESTAMP')
+    notes = Column(String(255))
 
 
-Base.metadata.create_all(bind=engine)

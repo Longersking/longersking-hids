@@ -12,17 +12,10 @@
     <script src="../../static/js/request.js"></script>
     <script src="../../static/js/vue-router.js"></script>
     <style>
-        html {
+        html, body {
             margin: 0;
             padding: 0;
             height: 100%;
-
-        }
-
-        body {
-            padding: 0;
-            height: 100%;
-            margin: 0;
         }
 
         #app {
@@ -61,7 +54,6 @@
         }
 
         .page-container {
-
         }
 
         .menu {
@@ -114,7 +106,7 @@
                 <div slot="reference" class="info-menu">
                     <el-avatar :size="50"
                                :src="userInfo.avatar" style="margin-right: 10px"></el-avatar>
-                    <span>${userInfo.username}</span>
+                    <span>${ userInfo.username }</span>
                 </div>
                 <div class="info-menu-list">
                     <div class="info-menu-item" @click="showInfoDialog()">
@@ -135,15 +127,16 @@
                         text-color="#fff"
                         active-text-color="#ffd04b"
                         :collapse="isCollapse">
-                    <el-submenu v-for="items in menuList" :index="items.index + ''">
+                    <el-submenu v-for="items in menuList" :key="items.id" :index="items.id + ''">
+
                         <template slot="title">
                             <i :class="items.icon"></i>
-                            <span>${items.name}</span>
+                            <span>${ items.name }</span>
                         </template>
-                        <el-menu-item v-for="item in items.child" :index="item.index + ''"
-                                      @click="handleMenuChange(item.index,item.url)">
+                        <el-menu-item v-for="item in items.child" :key="item.id" :index="item.id + ''"
+                                      @click="handleMenuChange(item)">
                             <i :class="item.icon"></i>
-                            <span slot="title">${item.name}</span>
+                            <span slot="title">${ item.name }</span>
                         </el-menu-item>
                     </el-submenu>
                 </el-menu>
@@ -171,9 +164,6 @@
                 </el-main>
             </el-container>
         </el-container>
-        <!--        <el-footer class="footer">-->
-        <!--            底部区域-->
-        <!--        </el-footer>-->
     </el-container>
     <el-dialog title="修改信息" :visible.sync="infoDialogVisible">
         <el-form :model="userInfo">
@@ -184,11 +174,11 @@
                 <el-input v-model="userInfo.avatar" placeholder="用户名"></el-input>
             </el-form-item>
             <el-form-item label="旧密码">
-                <el-input v-model="userInfo.oldpass" placeholder="用户名"></el-input>
+                <el-input v-model="userInfo.oldpass" placeholder="旧密码" type="password"></el-input>
             </el-form-item>
             <el-form-item label="新密码">
-                <el-input v-model="userInfo.newpass" placeholder="用户名"></el-input>
-            </el-form-item>
+                <el-input v-model="userInfo.newpass" placeholder="新密码" type="password"></el-input>
+            </el-item>
             <el-button type="primary" style="float: right" @click="submitForm">
                 提交
             </el-button>
@@ -204,89 +194,13 @@
         data: function () {
             return {
                 infoDialogVisible: false,
-                // Todo 修复导航栏切换的问题。
-                menuList: [
-                    {
-                        index: 0,
-                        name: "系统管理",
-                        icon: "el-icon-s-home",
-                        child: [
-                            {
-                                index: "0-0",
-                                name: "首页",
-                                icon: "el-icon-s-home",
-                                url: "/home"
-                            }
-                        ]
-                    },
-                    {
-                        index: 1,
-                        name: "用户管理",
-                        icon: "el-icon-user-solid",
-                        child: [
-                            {
-                                index: "1-0",
-                                name: "添加用户",
-                                icon: "el-icon-circle-plus",
-                                url: "/add"
-                            },
-                            {
-                                index: "1-1",
-                                name: "用户列表",
-                                icon: "el-icon-circle-plus",
-                                url: "/user/list"
-                            },
-                            {
-                                index: "1-2",
-                                name: "登录记录",
-                                icon: "el-icon-circle-plus",
-                                url: "/user/logpage"
-                            }
-
-                        ],
-                        size: 50
-                    },
-                    {
-                        index: 2,
-                        name: "访问控制",
-                        icon: "el-icon-lock",
-                        child: [
-                            {
-                                index: "2-0",
-                                name: "访问记录",
-                                icon: "el-icon-coin",
-                                url: "/ip/log"
-                            },
-                            {
-                                index: "2-1",
-                                name: "封禁列表",
-                                icon: "el-icon-circle-plus",
-                                url: "/disabled_ip"
-                            }
-                        ],
-                        size: 50
-                    },
-                    {
-                        index: 3,
-                        name: "网络监控",
-                        icon: "el-icon-view",
-                        child: [
-                            {
-                                index: "3-0",
-                                name: "监测大屏",
-                                icon: "el-icon-c-scale-to-original",
-                                url: "/network/monitor"
-                            },
-                        ],
-                        size: 50
-                    },
-                ],
+                menuList: [],
                 isCollapse: true,
                 nowPageUrl: "/home",
-                editableTabsValue: '2',
+                editableTabsValue: '/home',
                 editableTabs: [
                     {
-                        name: "首页",
+                        name: "/home",
                         title: "首页",
                         url: "/home"
                     }
@@ -297,33 +211,33 @@
             }
         },
         async mounted() {
-            //     获取用户信息
+            // 获取用户信息
             let token = localStorage.getItem("userToken");
-            //     获取信息
             let config = {
                 headers: {
                     "authorization": "bearer " + token
                 }
-            }
-            let res = await request.get("/user/userMessage", {}, config)
+            };
+            let res = await request.get("/api/user/userMessage", {}, config);
             if (res !== undefined && res.code >= 0) {
-                this.userInfo = res.data.data
-                //     储存用户信息
-                localStorage.setItem("userinfo", JSON.stringify(this.userInfo))
+                this.userInfo = res.data.data;
+                localStorage.setItem("userinfo", JSON.stringify(this.userInfo));
             } else {
-                window.location.href = "/"
+                window.location.href = "/";
+            }
+
+            // 获取菜单列表
+            let menuRes = await request.get("/api/menu/get", {}, config);
+            if (menuRes.data !== undefined && menuRes.code >= 0) {
+                this.menuList = menuRes.data;
             }
         },
         methods: {
             showInfoDialog() {
-                this.infoDialogVisible = true
+                this.infoDialogVisible = true;
             },
             menuChange() {
-                if (this.isCollapse === true) {
-                    this.isCollapse = false
-                } else {
-                    this.isCollapse = true
-                }
+                this.isCollapse = !this.isCollapse;
             },
             removeTab(targetName) {
                 let tabs = this.editableTabs;
@@ -343,41 +257,38 @@
                 this.editableTabs = tabs.filter(tab => tab.name !== targetName);
             },
             refresh() {
-                console.log(this.$refs[this.nowPageUrl][0]);
-                this.$refs[this.nowPageUrl][0].src = this.nowPageUrl
+                this.$refs[this.nowPageUrl][0].src = this.nowPageUrl;
             },
             changePage(url) {
-                this.nowPageUrl = url
+                this.nowPageUrl = url;
             },
             addTab(item) {
-                for (x of this.editableTabs) {
-                    if (item.name === x.name && item.url === x.url) {
+                for (let x of this.editableTabs) {
+                    if (item.url === x.url) {
+                        this.editableTabsValue = item.url;
                         return false;
                     }
                 }
                 this.editableTabs.push({
                     title: item.name,
-                    name: item.name,
+                    name: item.url,
                     url: item.url
-                })
-
+                });
+                this.editableTabsValue = item.url;
             },
-            handleMenuChange(index, url) {
-                //     切换iframe
-                this.changePage(url)
-                let idx = index.split("-")
-                //     添加tab
-                this.addTab(this.menuList[idx[0]]['child'][idx[1]])
+            handleMenuChange(item) {
+                this.changePage(item.url);
+                this.addTab(item);
             },
             tabClick(e) {
-                this.changePage(this.editableTabs[e.index].url)
+                this.changePage(this.editableTabs[e.index].url);
             },
             logout() {
                 localStorage.clear();
-                window.location.href = "/"
+                window.location.href = "/";
             },
             async submitForm() {
-                let res = await request.post("/user/updateInfo", this.userInfo)
+                let res = await request.post("/user/updateInfo", this.userInfo);
                 if (res.code == 1) {
                     this.$message({
                         message: res.msg,
@@ -390,7 +301,6 @@
                     });
                 }
             }
-
         }
     })
 </script>

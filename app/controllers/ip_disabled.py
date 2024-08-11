@@ -6,22 +6,13 @@ from ..models.ip_disabled import IpDisabled
 from pydantic import BaseModel
 from .. import common
 from datetime import datetime
+from ..schemas.ip import addIP,DisIpItem
 
 # 配置路由
 ip_route = APIRouter()
 
 
-# pydantic模型
-class DisIpItem(BaseModel):
-    id: int
-    ip: str
-    create_time: str
-    operator: int
 
-
-class addIP(BaseModel):
-    ip: str
-    operator: int
 
 
 # 获取被禁用的ip信息
@@ -35,7 +26,7 @@ async def get(page:int = 1,db: Session = Depends(get_db)) -> Dict[str, Any]:
     count = db.query(IpDisabled).count()
 
     # 将查询结果转换为 Pydantic 模型列表
-    ips_list = [DisIpItem(id=ip.id, ip=ip.ip, create_time=str(ip.create_time), operator=ip.operator) for ip in
+    ips_list = [DisIpItem(id=ip.id, host_ip = ip.host_ip,ip=ip.ip, create_time=str(ip.create_time), operator=ip.operator) for ip in
                 ips_query]
     return common.dataReturn(1, msg="disabled_ip", data={"data":ips_list, "total":count})
 

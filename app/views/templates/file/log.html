@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件改动记录</title>
+    <link rel="stylesheet" href="/static/css/animate.min.css">
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/echarts.js"></script>
+    <!-- 引入Monaco Editor的CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs/loader.js"></script>
+
+</head>
+<body>
+<div id="app">
+    <el-container>
+        <el-header>
+            <h2>文件改动记录</h2>
+        </el-header>
+        <el-main>
+            <!-- 筛选表单 -->
+            <el-form :inline="true" :model="filters" class="demo-form-inline">
+                <el-form-item label="文件路径">
+                    <el-input v-model="filters.file_path" placeholder="请输入文件路径"></el-input>
+                </el-form-item>
+                <el-form-item label="变更类型">
+                    <el-select v-model="filters.action" placeholder="请选择变更类型">
+                        <el-option v-for="action in uniqueActions" :key="action" :label="action"
+                                   :value="action"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="所属者">
+                    <el-input v-model="filters.owner" placeholder="请输入所属者"></el-input>
+                </el-form-item>
+                <el-form-item label="IP地址">
+                    <el-select v-model="filters.ip" placeholder="请选择IP">
+                        <el-option v-for="ip in uniqueIps" :key="ip" :label="ip" :value="ip"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="fetchFileLogs">筛选</el-button>
+                </el-form-item>
+            </el-form>
+            <!-- 文件改动记录表格 -->
+            <el-table :data="fileLogs" stripe style="width: 100%" @sort-change="handleSort">
+                <el-table-column prop="id" label="ID" sortable></el-table-column>
+                <el-table-column prop="ip" label="主机IP" sortable></el-table-column>
+                <el-table-column prop="file_path" label="文件路径" sortable></el-table-column>
+                <el-table-column prop="action" label="变更类型" sortable>
+                    <template slot-scope="scope">
+                        <span :class="{'blue-span': scope.row.action === 'modified', 'red-span': scope.row.action === 'deleted', 'green-span': scope.row.action === 'created'}">
+                            [[ scope.row.action ]]
+                        </span>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="size" label="文件大小" sortable>
+                    <template slot-scope="scope">
+                        [[ formatSize(scope.row.size) ]]
+                    </template>
+                </el-table-column>
+                <el-table-column prop="owner" label="所属者" sortable></el-table-column>
+                <el-table-column prop="desc" label="描述"></el-table-column>
+                <el-table-column prop="log_time" label="记录时间" sortable></el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-button type="text" @click="showDetails(scope.row)">查看详情</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <!-- 分页组件 -->
+            <el-pagination
+                    background
+                    layout="total, sizes, prev, pager, next"
+                    :total="totalFileLogs"
+                    :page-size="pageSize"
+                    :page-sizes="[10, 20, 50, 100,200]"
+                    @current-change="handlePageChange"
+                    @size-change="handleSizeChange"> <!-- 监听页大小变化 -->
+            </el-pagination>
+            <!-- 数据可视化 -->
+            <div id="chart" style="width: 100%; height: 400px;"></div>
+        </el-main>
+    </el-container>
+    <!-- 查看详情对话框 -->
+    <el-dialog title="文件详情" :visible.sync="dialogVisible" width="50%">
+        <el-form :model="selectedFileLog">
+            <el-form-item label="文件路径">
+                <span>[[ selectedFileLog.file_path ]]</span>
+            </el-form-item>
+            <el-form-item label="变更类型">
+                <span>[[ selectedFileLog.action ]]</span>
+            </el-form-item>
+            <el-form-item label="文件大小">
+                <span>[[ formatSize(selectedFileLog.size) ]]</span>
+            </el-form-item>
+            <el-form-item label="所属者">
+                <span>[[ selectedFileLog.owner ]]</span>
+            </el-form-item>
+            <el-form-item label="描述">
+                <span>[[ selectedFileLog.desc ]]</span>
+            </el-form-item>
+            <el-form-item label="文件内容">
+                <div id="monaco-editor" style="height:400px;"></div>
+            </el-form-item>
+            <el-form-item label="文件创建时间">
+                <span>[[ selectedFileLog.file_create_time ]]</span>
+            </el-form-item>
+            <el-form-item label="文件修改时间">
+                <span>[[ selectedFileLog.file_modify_time ]]</span>
+            </el-form-item>
+            <el-form-item label="上次修改时间">
+                <span>[[ selectedFileLog.update_time ]]</span>
+            </el-form-item>
+            <el-form-item label="记录时间">
+                <span>[[ selectedFileLog.log_time ]]</span>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+</div>
+
+<script>
+    require.config({paths: {'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs'}});
+    require(['vs/editor/editor.main'],function(){new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data() {
+            return {
+                filters: {
+                    file_path: '',
+                    action: '',
+                    owner: '',
+                    ip: ''
+                },
+                fileLogs: [],
+                totalFileLogs: 0,
+                pageSize: 10,  // 默认的每页条数
+                dialogVisible: false,
+                selectedFileLog: {},
+                chart: null,
+                cmOptions: {
+                    mode: 'javascript',
+                    lineNumbers: true,
+                    readOnly: true
+                }
+            }
+        },
+
+        computed: {
+            uniqueActions() {
+                if (Array.isArray(this.fileLogs)) {
+                    return [...new Set(this.fileLogs.map(log => log.action))];
+                }
+                return [];
+            },
+            uniqueIps() {
+                if (Array.isArray(this.fileLogs)) {
+                    return [...new Set(this.fileLogs.map(log => log.ip))];
+                }
+                return [];
+            }
+        },
+        created() {
+            this.fetchFileLogs();
+        },
+        mounted() {
+            this.chart = echarts.init(document.getElementById('chart'));
+            this.renderChart();
+        },
+        methods: {
+            fetchFileLogs(page = 1) {
+                page = typeof page == 'number' ? page : page.detail
+                const query = new URLSearchParams({
+                    page,
+                    page_size: this.pageSize,  // 传递当前页大小
+                    file_path: this.filters.file_path,
+                    action: this.filters.action,
+                    owner: this.filters.owner,
+                    ip: this.filters.ip
+                }).toString();
+
+                axios.get(`/api/file_logs/get?${query}`)
+                        .then(response => {
+                            this.totalFileLogs = parseInt(response.headers['x-total-count']);
+                            this.fileLogs = response.data;
+                            this.renderChart();
+                        });
+            },
+            handleSort({prop, order}) {
+                // 添加排序逻辑
+            },
+            handleSizeChange(newSize) {
+                this.pageSize = newSize;
+                this.fetchFileLogs(1);  // 重新请求第一页数据
+            },
+            handlePageChange(page) {
+                this.fetchFileLogs(page);
+            },
+            showDetails(fileLog) {
+                this.selectedFileLog = fileLog;
+                this.dialogVisible = true;
+                this.$nextTick(() => {
+                    if (this.editor) {
+                        this.editor.setValue(this.selectedFileLog.content);
+                    } else {
+                        this.editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                            value: this.selectedFileLog.content,
+                            language: 'javascript',  // 根据需要设置语言
+                            readOnly: true,
+                            automaticLayout: true
+                        });
+                    }
+                });
+            },
+            renderChart() {
+                const ipGroups = this.fileLogs.reduce((acc, log) => {
+                    if (!acc[log.ip]) {
+                        acc[log.ip] = {created: 0, modified: 0, deleted: 0};
+                    }
+                    acc[log.ip][log.action]++;
+                    return acc;
+                }, {});
+
+                const seriesData = ['created', 'modified', 'deleted'].map(action => ({
+                    name: action,
+                    type: 'line',
+                    data: Object.keys(ipGroups).map(ip => ipGroups[ip][action])
+                }));
+
+                const option = {
+                    title: {
+                        text: '文件改动记录'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['created', 'modified', 'deleted']
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: Object.keys(ipGroups)
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: seriesData
+                };
+                this.chart.setOption(option);
+            },
+            formatSize(size) {
+                if (size < 1024) {
+                    return `${size} B`;
+                } else if (size < 1024 * 1024) {
+                    return `${(size / 1024).toFixed(2)} KB`;
+                } else {
+                    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+                }
+            }
+        }
+    });
+    })
+</script>
+
+<style>
+    .blue-span {
+        color: blue;
+    }
+
+    .red-span {
+        color: red;
+    }
+
+    .green-span {
+        color: green;
+    }
+</style>
+</body>
+</html>

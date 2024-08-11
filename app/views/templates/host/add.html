@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加主机</title>
+    <link rel="stylesheet" href="/static/css/animate.min.css">
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/request.js"></script>
+    <script src="../../../static/js/echarts.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-form :model="host" ref="hostForm" label-width="120px">
+        <el-form-item label="主机IP" prop="host_ip" :rules="[{ required: true, message: '请输入主机IP', trigger: 'blur' }]">
+            <el-input v-model="host.host_ip"></el-input>
+        </el-form-item>
+        <el-form-item label="操作系统" prop="operating_system" :rules="[{ required: true, message: '请输入操作系统', trigger: 'blur' }]">
+            <el-input v-model="host.operating_system"></el-input>
+        </el-form-item>
+        <el-form-item label="别名">
+            <el-input v-model="host.alias"></el-input>
+        </el-form-item>
+        <el-form-item label="CPU核心数">
+            <el-input-number v-model="host.cpu_cores" :min="0"></el-input-number>
+        </el-form-item>
+        <el-form-item label="总内存 (GB)">
+            <el-input-number v-model="host.total_memory_gb" :min="0" :step="0.01"></el-input-number>
+        </el-form-item>
+        <el-form-item label="总磁盘空间 (GB)">
+            <el-input-number v-model="host.total_disk_space_gb" :min="0" :step="0.01"></el-input-number>
+        </el-form-item>
+        <el-form-item label="网络带宽 (Mbps)">
+            <el-input-number v-model="host.network_bandwidth_mbps" :min="0" :step="0.01"></el-input-number>
+        </el-form-item>
+        <el-form-item label="备注">
+            <el-input type="textarea" v-model="host.notes"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="submitForm">添加主机</el-button>
+        </el-form-item>
+    </el-form>
+</div>
+
+<script>
+new Vue({
+    el: '#app',
+    data() {
+        return {
+            host: {
+                host_ip: '',
+                operating_system: '',
+                alias: '',
+                cpu_cores: null,
+                total_memory_gb: null,
+                total_disk_space_gb: null,
+                network_bandwidth_mbps: null,
+                notes: ''
+            }
+        };
+    },
+    methods: {
+        async submitForm() {
+            try {
+                const headers = {
+                    headers:{
+                    "authorization": "bearer " + localStorage.getItem("userToken")
+                }
+                }
+                const response = await axios.post('/api/host/add', this.host,headers);
+                this.$message.success('主机添加成功！');
+                this.$refs.hostForm.resetFields();
+            } catch (error) {
+                this.$message.error('添加主机失败：' + error.response.data.detail);
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>

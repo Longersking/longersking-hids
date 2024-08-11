@@ -47,3 +47,33 @@ async def log(req: Request):
 @router.get("/network/monitor", response_class=HTMLResponse)
 async def log(req: Request):
     return template.TemplateResponse("network/monitor.html", context={"request": req})
+@router.get("/network/alert", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("network/alert.html", context={"request": req})
+# 主机
+@router.get("/host/list", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("host/host_list.html", context={"request": req})
+@router.get("/host/add", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("host/add.html", context={"request": req})
+@router.get("/host/info", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("host/info.html", context={"request": req})
+
+@router.get("/host/processes", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("host/processes.html", context={"request": req})
+
+
+
+# 文件
+@router.get("/file/log", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("file/log.html", context={"request": req})
+
+
+# 数据包
+@router.get("/packet/log", response_class=HTMLResponse)
+async def log(req: Request):
+    return template.TemplateResponse("packet/log.html", context={"request": req})

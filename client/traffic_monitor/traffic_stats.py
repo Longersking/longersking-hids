@@ -23,11 +23,11 @@ DNS_PORTS = [53]
 
 def get_protocol_size(packet):
     global protocol_sizes
-    
+
     if packet.haslayer(IP):
         ip_layer = packet.getlayer(IP)
         packet_size = len(packet)
-        
+
         if packet.haslayer(TCP):
             protocol_sizes['TCP'] += packet_size
             tcp_layer = packet.getlayer(TCP)
@@ -46,8 +46,8 @@ def get_protocol_size(packet):
 
         elif packet.haslayer(ICMP):
             protocol_sizes['ICMP'] += packet_size
-            
-def deal_stats(queue,pos):
+
+def deal_stats(queue,pos=1):
     global protocol_sizes
 
     # 获取初始的网络I/O统计信息
@@ -60,8 +60,8 @@ def deal_stats(queue,pos):
         net_io_current = psutil.net_io_counters()
 
         # 计算流入和流出流量（单位：Mb/s）
-        bytes_sent_per_sec = (net_io_current.bytes_sent - net_io_initial.bytes_sent) 
-        bytes_recv_per_sec = (net_io_current.bytes_recv - net_io_initial.bytes_recv) 
+        bytes_sent_per_sec = (net_io_current.bytes_sent - net_io_initial.bytes_sent)
+        bytes_recv_per_sec = (net_io_current.bytes_recv - net_io_initial.bytes_recv)
 
         # print(f"Total Traffic: Sent: {bytes_sent_per_sec:.2f} Mb/s, Received: {bytes_recv_per_sec:.2f} Mb/s")
         # 写入队列
@@ -71,22 +71,22 @@ def deal_stats(queue,pos):
 
         # 更新初始网络I/O统计信息
         net_io_initial = net_io_current
-        
-        
-        
+
+
+
         # 每秒获取一次数据
         time.sleep(1)
-        
+
 def put_queue(queue,bytes_sent_per_sec,bytes_recv_per_sec,protocol_sizes):
         data = {
             "total_sent": round(bytes_sent_per_sec / (1024 * 1024), 4),
             "total_received": round(bytes_recv_per_sec / (1024 * 1024), 4),
             "protocol_sizes": {k: round(v / (1024 * 1024), 4) for k, v in protocol_sizes.items()}
-        } 
+        }
         queue.put(data)
-        
-        
-            
+
+
+
 
 class TrafficStats:
     def __init__(self):
@@ -110,11 +110,11 @@ class TrafficStats:
         HTTPS_PORTS = [443]
         SSH_PORTS = [22]
         DNS_PORTS = [53]
-        
+
         if packet.haslayer(IP):
             ip_layer = packet.getlayer(IP)
             packet_size = len(packet)
-            
+
             if packet.haslayer(TCP):
                 self.protocol_sizes['TCP'] += packet_size
                 tcp_layer = packet.getlayer(TCP)
@@ -131,21 +131,21 @@ class TrafficStats:
                     self.protocol_sizes['DNS'] += packet_size
             elif packet.haslayer(ICMP):
                 self.protocol_sizes['ICMP'] += packet_size
-                
-        
+
+
         # 获取当前的网络I/O统计信息
         net_io_current = psutil.net_io_counters()
 
         # 计算并更新发送和接收的总数据量，单位：字节
-        self.bytes_sent_per_sec = (net_io_current.bytes_sent - self.net_io_initial.bytes_sent) 
+        self.bytes_sent_per_sec = (net_io_current.bytes_sent - self.net_io_initial.bytes_sent)
         self.bytes_recv_per_sec = (net_io_current.bytes_recv - self.net_io_initial.bytes_recv)
-        
+
         # 更新初始网络I/O统计信息
         self.net_io_initial = net_io_current
         # 重置统计数据
         self.protocol_sizes = {key: 0 for key in self.protocol_sizes}
 
-        
+
 
     def get_current_stats(self):
         return {
@@ -153,13 +153,13 @@ class TrafficStats:
             "total_received": round(self.bytes_recv_per_sec / (1024 * 1024), 4),
             "protocol_sizes": {k: round(v / (1024 * 1024), 4) for k, v in self.protocol_sizes.items()}
         }
-        
+
     def reset_stats(self):
         self.total_sent = 0
         self.total_received = 0
         self.protocol_sizes = {k: 0 for k in self.protocol_sizes}
-        
+
     # 写入队列
     def writeQueue(sele,queue):
         pass
-        
+
