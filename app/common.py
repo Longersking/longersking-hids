@@ -36,7 +36,6 @@ def dealWsData(data_json):
             # 预测CPU异常
             res, level, desc = predict_cpu_load(data_json)
             if res:
-                print(desc)
                 write_alert(type="cpu_load_alert", level=level, ip=data_json['ip'], desc=desc, snapshot=data_json['data'])
             # 写入系统负载记录
             # insert_system_load(data_json)

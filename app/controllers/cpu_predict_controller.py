@@ -88,11 +88,10 @@ def handle_new_data(ip, new_data, max_core):
     features, num_cores = parse_cpu_data(new_data)
     features = complete_features(features, max_core)
     res = detect_anomaly(ip, new_data, max_core)
-
-    if res and features['percent_avg'] > 20:
+    if (res and features['percent_avg'] > 20) or features['percent_avg'] > 80:
         risk_level, reasons = evaluate_risk(features)
         description = "检测到CPU负载异常。可能的原因: " + "; ".join(reasons)
-        return res, risk_level, description
+        return 1, risk_level, description
     else:
         return 0, "",""
 
