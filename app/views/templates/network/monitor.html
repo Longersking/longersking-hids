@@ -6,6 +6,8 @@
     <title>主机检测系统流量统计</title>
     <script src="../../static/js/vue2.js"></script>
     <script src="../../../static/js/echarts.js"></script>
+    <!-- 添加 Axios CDN 引用 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         body {
             background-color: #1f2d3d;
@@ -13,36 +15,33 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            overflow-y: scroll; /* Ensure the body can scroll */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            width: 100vw;
+            height: 100%;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
         }
 
         .top-section {
             display: flex;
-            min-height: 85%; /* Adjusted to take 85% of the viewport height */
+            flex: 1;
             padding: 10px;
-            box-sizing: border-box; /* Ensure padding is included in height */
-        }
-
-        .bottom-section {
-            display: flex;
-            min-height: 30%; /* Adjusted to take 15% of the viewport height */
-            justify-content: space-around;
-            padding: 10px;
-            box-sizing: border-box; /* Ensure padding is included in height */
-            overflow-y: auto; /* Allow scrolling for the bottom section */
+            box-sizing: border-box;
         }
 
         .top-left {
             width: 30%;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
         }
 
         .top-right {
@@ -63,22 +62,6 @@
             flex: 1;
         }
 
-        .chart-container {
-            width: 23%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .chart {
-            background-color: #2c3e50;
-            margin: 5px;
-            border-radius: 8px;
-            width: 100%;
-            height: 80%;
-        }
-
-
     </style>
 </head>
 <body>
@@ -94,21 +77,8 @@
             <div id="protocol-traffic-trend" class="chart"></div>
         </div>
     </div>
-    <div class="bottom-section">
-        <div class="chart-container">
-            <div id="application-distribution" class="chart"></div>
-        </div>
-        <div class="chart-container">
-            <div id="host-distribution" class="chart"></div>
-        </div>
-        <div class="chart-container">
-            <div id="segment-distribution" class="chart"></div>
-        </div>
-        <div class="chart-container">
-            <div id="node-distribution" class="chart"></div>
-        </div>
-    </div>
 </div>
+
 <script>
     new Vue({
         el: '#app',
@@ -131,19 +101,14 @@
             this.initWebSocket();
             this.initNetworkAlertChart();
             this.initNetworkPacketLossChart();
-            this.initTotalTrafficTrendChart();  // 初始化总流量趋势图表
-            this.initIpTrafficTrendChart();     // 初始化按IP区分的流量趋势图表
-            this.initProtocolTrafficTrendChart(); // 初始化按协议划分的流量趋势图表
-            this.initApplicationDistributionChart();
-            this.initHostDistributionChart();
-            this.initSegmentDistributionChart();
-            this.initNodeDistributionChart();
-            this.initPacketLossChart();
+            this.initTotalTrafficTrendChart();
+            this.initIpTrafficTrendChart();
+            this.initProtocolTrafficTrendChart();
         },
         methods: {
             initWebSocket() {
-                let domain = document.domain
-                this.socket = new WebSocket('ws://' + domain + ':8003/ws'); // 确保WebSocket URL正确
+                let domain = document.domain;
+                this.socket = new WebSocket('ws://' + domain + ':8003/ws?client_type=web'); // 确保WebSocket URL正确
                 this.socket.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
@@ -376,70 +341,181 @@
                 }
             },
 
-            calculateTotalPacketSize(direction) {
-                return Object.values(this.ipTrafficData).reduce((total, ipData) => {
-                    const latestData = ipData[direction][ipData[direction].length - 1];
-                    return total + (latestData ? latestData.packetSize : 0);
-                }, 0);
-            },
-            updatePacketLossChart(packetLossRate) {
-                if (this.packetLossChart) {
-                    this.packetLossChart.setOption({
-                        series: [{
-                            data: [{value: packetLossRate * 100, name: '丢包率'}]
-                        }]
-                    });
-                }
-            },
-            initNetworkAlertChart() {
-                const chart = echarts.init(document.getElementById('network-alert'));
-                const option = {
-                    title: {
-                        text: '网络告警',
-                        left: 'center',
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    tooltip: {
-                        trigger: 'item'
-                    },
-                    legend: {
-                        orient: 'vertical',
-                        left: 'left',
-                        textStyle: {
-                            color: '#fff'
-                        }
+            updateTotalTrafficTrendChart() {
+                const times = this.totalTrafficData.map(item => item.time);
+                const inPacketSizes = this.totalTrafficData.map(item => item.inPacketSize);
+                const outPacketSizes = this.totalTrafficData.map(item => item.outPacketSize);
+
+                this.totalTrafficTrendChart.setOption({
+                    xAxis: {
+                        data: times
                     },
                     series: [
                         {
-                            name: '告警数量',
-                            type: 'pie',
-                            radius: ['50%', '70%'],  // 设置为环形图
-                            avoidLabelOverlap: false,
-                            label: {
-                                show: false,
-                                position: 'center'
-                            },
-                            emphasis: {
-                                label: {
-                                    show: true,
-                                    fontSize: '30',
-                                    fontWeight: 'bold'
-                                }
-                            },
-                            labelLine: {
-                                show: false
-                            },
-                            data: [
-                                {value: 82, name: '紧急', itemStyle: {color: '#ff6f61'}},
-                                {value: 154, name: '重大', itemStyle: {color: '#f6e58d'}},
-                                {value: 828, name: '轻微', itemStyle: {color: '#6ab04c'}}
-                            ]
+                            name: '流入',
+                            data: inPacketSizes
+                        },
+                        {
+                            name: '流出',
+                            data: outPacketSizes
                         }
                     ]
+                });
+            },
+            updateIpTrafficTrendChart() {
+                const times = this.totalTrafficData.map(item => item.time);
+                const series = Object.keys(this.ipTrafficData).flatMap(ip => {
+                    const inSeries = {
+                        name: `${ip} 流入`,
+                        type: 'line',
+                        data: this.ipTrafficData[ip].in.map(item => item.packetSize),
+                        itemStyle: {
+                            color: this.getColor(ip, 'in')
+                        },
+                        areaStyle: {
+                            color: this.getColor(ip, 'in', 0.3)
+                        }
+                    };
+                    const outSeries = {
+                        name: `${ip} 流出`,
+                        type: 'line',
+                        data: this.ipTrafficData[ip].out.map(item => item.packetSize),
+                        itemStyle: {
+                            color: this.getColor(ip, 'out')
+                        },
+                        areaStyle: {
+                            color: this.getColor(ip, 'out', 0.3)
+                        }
+                    };
+                    return [inSeries, outSeries];
+                });
+
+                this.ipTrafficTrendChart.setOption({
+                    xAxis: {
+                        data: times
+                    },
+                    legend: {
+                        data: series.map(s => s.name)
+                    },
+                    series: series
+                });
+            },
+            updateProtocolTrafficTrendChart() {
+                const times = this.totalTrafficData.map(item => item.time);
+                const series = Object.keys(this.protocolTrafficData).flatMap(protocol => {
+                    return {
+                        name: `${protocol} 流入`,
+                        type: 'line',
+                        data: this.protocolTrafficData[protocol].in.map(item => item.packetSize),
+                        itemStyle: {
+                            color: this.getColor(protocol, 'in')
+                        },
+                        areaStyle: {
+                            color: this.getColor(protocol, 'in', 0.3)
+                        }
+                    };
+                });
+
+                this.protocolTrafficTrendChart.setOption({
+                    xAxis: {
+                        data: times
+                    },
+                    legend: {
+                        data: series.map(s => s.name)
+                    },
+                    series: series
+                });
+            },
+            getColor(key, direction, opacity = 1) {
+                if (!this.colors[key]) {
+                    const r = Math.floor(Math.random() * 256);
+                    const g = Math.floor(Math.random() * 256);
+                    const b = Math.floor(Math.random() * 256);
+                    this.colors[key] = {
+                        in: `rgba(${r}, ${g}, ${b}, ${opacity})`,
+                        out: `rgba(${r}, ${g}, ${b}, ${opacity})`
+                    };
+                }
+                return this.colors[key][direction];
+            },
+            initNetworkAlertChart() {
+                axios.get('/api/alert/distribution')
+                    .then(response => {
+                        const data = response.data.data;
+                        const chartData = Object.keys(data).map(type => {
+                            let color = '#4CAF50'; // 轻微默认颜色
+                            if (type === 'critical') {
+                                color = '#D32F2F';
+                            } else if (type === 'serious') {
+                                color = '#F44336';
+                            } else if (type === 'medium') {
+                                color = '#FF9800';
+                            }
+                            return {
+                                value: data[type],
+                                name: this.translateAlertType(type),
+                                itemStyle: { color: color }
+                            };
+                        });
+
+                        const chart = echarts.init(document.getElementById('network-alert'));
+                        const option = {
+                            title: {
+                                text: '网络告警',
+                                left: 'center',
+                                textStyle: {
+                                    color: '#fff'
+                                }
+                            },
+                            tooltip: {
+                                trigger: 'item'
+                            },
+                            legend: {
+                                orient: 'vertical',
+                                left: 'left',
+                                textStyle: {
+                                    color: '#fff'
+                                }
+                            },
+                            series: [
+                                {
+                                    name: '告警数量',
+                                    type: 'pie',
+                                    radius: ['50%', '70%'],  // 设置为环形图
+                                    avoidLabelOverlap: false,
+                                    label: {
+                                        show: false,
+                                        position: 'center'
+                                    },
+                                    emphasis: {
+                                        label: {
+                                            show: true,
+                                            fontSize: '30',
+                                            fontWeight: 'bold'
+                                        }
+                                    },
+                                    labelLine: {
+                                        show: false
+                                    },
+                                    data: chartData
+                                }
+                            ]
+                        };
+                        chart.setOption(option);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching alert distribution:', error);
+                    });
+            },
+
+            translateAlertType(type) {
+                const translations = {
+                    critical: '紧急',
+                    serious: '重要',
+                    medium: '中等',
+                    light: '轻微'
                 };
-                chart.setOption(option);
+                return translations[type] || type;
             },
             initNetworkPacketLossChart() {
                 const chart = echarts.init(document.getElementById('network-packet-loss'));
@@ -538,323 +614,9 @@
                     ]
                 };
                 chart.setOption(option);
-            },
-            updateTotalTrafficTrendChart() {
-                const times = this.totalTrafficData.map(item => item.time);
-                const inPacketSizes = this.totalTrafficData.map(item => item.inPacketSize);
-                const outPacketSizes = this.totalTrafficData.map(item => item.outPacketSize);
-
-                this.totalTrafficTrendChart.setOption({
-                    xAxis: {
-                        data: times
-                    },
-                    series: [
-                        {
-                            name: '流入',
-                            data: inPacketSizes
-                        },
-                        {
-                            name: '流出',
-                            data: outPacketSizes
-                        }
-                    ]
-                });
-            },
-            updateIpTrafficTrendChart() {
-                const times = this.totalTrafficData.map(item => item.time);
-                const series = Object.keys(this.ipTrafficData).flatMap(ip => {
-                    const inSeries = {
-                        name: `${ip} 流入`,
-                        type: 'line',
-                        data: this.ipTrafficData[ip].in.map(item => item.packetSize),
-                        itemStyle: {
-                            color: this.getColor(ip, 'in')
-                        },
-                        areaStyle: {
-                            color: this.getColor(ip, 'in', 0.3)
-                        }
-                    };
-                    const outSeries = {
-                        name: `${ip} 流出`,
-                        type: 'line',
-                        data: this.ipTrafficData[ip].out.map(item => item.packetSize),
-                        itemStyle: {
-                            color: this.getColor(ip, 'out')
-                        },
-                        areaStyle: {
-                            color: this.getColor(ip, 'out', 0.3)
-                        }
-                    };
-                    return [inSeries, outSeries];
-                });
-
-                this.ipTrafficTrendChart.setOption({
-                    xAxis: {
-                        data: times
-                    },
-                    legend: {
-                        data: series.map(s => s.name)
-                    },
-                    series: series
-                });
-            },
-            updateProtocolTrafficTrendChart() {
-                const times = this.totalTrafficData.map(item => item.time);
-                const series = Object.keys(this.protocolTrafficData).flatMap(protocol => {
-                    return {
-                        name: `${protocol} 流入`,
-                        type: 'line',
-                        data: this.protocolTrafficData[protocol].in.map(item => item.packetSize),
-                        itemStyle: {
-                            color: this.getColor(protocol, 'in')
-                        },
-                        areaStyle: {
-                            color: this.getColor(protocol, 'in', 0.3)
-                        }
-                    };
-                });
-
-                this.protocolTrafficTrendChart.setOption({
-                    xAxis: {
-                        data: times
-                    },
-                    legend: {
-                        data: series.map(s => s.name)
-                    },
-                    series: series
-                });
-            },
-            getColor(key, direction, opacity = 1) {
-                if (!this.colors[key]) {
-                    const r = Math.floor(Math.random() * 256);
-                    const g = Math.floor(Math.random() * 256);
-                    const b = Math.floor(Math.random() * 256);
-                    this.colors[key] = {
-                        in: `rgba(${r}, ${g}, ${b}, ${opacity})`,
-                        out: `rgba(${r}, ${g}, ${b}, ${opacity})`
-                    };
-                }
-                return this.colors[key][direction];
-            },
-            initApplicationDistributionChart() {
-                const chart = echarts.init(document.getElementById('application-distribution'));
-                const option = {
-                    title: {
-                        text: '应用分布',
-                        left: 'center',
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    tooltip: {
-                        trigger: 'item'
-                    },
-                    legend: {
-                        orient: 'horizontal',
-                        bottom: 0,
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    series: [
-                        {
-                            name: '应用',
-                            type: 'pie',
-                            radius: '50%',
-                            center: ['50%', '40%'],
-                            data: [
-                                {value: 43.67, name: 'svn-tcp', itemStyle: {color: '#ff6f61'}},
-                                {value: 7.09, name: 'HTTPS', itemStyle: {color: '#f6e58d'}},
-                                {value: 1, name: 'sun-sr-https-tcp', itemStyle: {color: '#6ab04c'}},
-                                {value: 1, name: '2380-TCP', itemStyle: {color: '#eb4d4b'}},
-                                {value: 1, name: '2379-TCP', itemStyle: {color: '#4834d4'}}
-                            ],
-                            emphasis: {
-                                itemStyle: {
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            }
-                        }
-                    ]
-                };
-                chart.setOption(option);
-            },
-
-            initHostDistributionChart() {
-                const chart = echarts.init(document.getElementById('host-distribution'));
-                const option = {
-                    title: {
-                        text: '主机分布',
-                        left: 'center',
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    tooltip: {
-                        trigger: 'item'
-                    },
-                    legend: {
-                        orient: 'horizontal',
-                        bottom: 0,
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    series: [
-                        {
-                            name: '主机',
-                            type: 'pie',
-                            radius: '50%',
-                            center: ['50%', '40%'],
-                            data: [
-                                {value: 12, name: '192.168.1.91', itemStyle: {color: '#ff6f61'}},
-                                {value: 26, name: '192.168.1.90', itemStyle: {color: '#f6e58d'}},
-                                {value: 1, name: '192.168.1.89', itemStyle: {color: '#6ab04c'}},
-                                {value: 1, name: '192.168.1.85', itemStyle: {color: '#eb4d4b'}},
-                                {value: 1, name: '192.168.1.84', itemStyle: {color: '#4834d4'}}
-                            ],
-                            emphasis: {
-                                itemStyle: {
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            }
-                        }
-                    ]
-                };
-                chart.setOption(option);
-            },
-
-            initSegmentDistributionChart() {
-                const chart = echarts.init(document.getElementById('segment-distribution'));
-                const option = {
-                    title: {
-                        text: '网段分布',
-                        left: 'center',
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    tooltip: {
-                        trigger: 'item'
-                    },
-                    legend: {
-                        orient: 'horizontal',
-                        bottom: 0,
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    series: [
-                        {
-                            name: '网段',
-                            type: 'pie',
-                            radius: '50%',
-                            center: ['50%', '40%'],
-                            data: [
-                                {value: 8.61, name: '192.168.1.0/24', itemStyle: {color: '#ff6f61'}},
-                                {value: 2, name: '223.104.9.0/24', itemStyle: {color: '#f6e58d'}},
-                                {value: 2, name: '10.0.0.0/24', itemStyle: {color: '#6ab04c'}},
-                                {value: 2, name: '221.217.94.0/24', itemStyle: {color: '#eb4d4b'}},
-                                {value: 2, name: '114.112.96.0/24', itemStyle: {color: '#4834d4'}}
-                            ],
-                            emphasis: {
-                                itemStyle: {
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            }
-                        }
-                    ]
-                };
-                chart.setOption(option);
-            },
-
-            initNodeDistributionChart() {
-                const chart = echarts.init(document.getElementById('node-distribution'));
-                const option = {
-                    title: {
-                        text: '节点分布',
-                        left: 'center',
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    tooltip: {
-                        trigger: 'item'
-                    },
-                    legend: {
-                        orient: 'horizontal',
-                        bottom: 0,
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    series: [
-                        {
-                            name: '节点',
-                            type: 'pie',
-                            radius: '50%',
-                            center: ['50%', '40%'],
-                            data: [
-                                {value: 14.06, name: '测试工作组3', itemStyle: {color: '#ff6f61'}},
-                                {value: 1, name: 'Web应用库', itemStyle: {color: '#f6e58d'}},
-                                {value: 1, name: '科研楼', itemStyle: {color: '#6ab04c'}},
-                                {value: 1, name: '测试工作组xxx', itemStyle: {color: '#eb4d4b'}},
-                                {value: 1, name: '互联网2', itemStyle: {color: '#4834d4'}}
-                            ],
-                            emphasis: {
-                                itemStyle: {
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            }
-                        }
-                    ]
-                };
-                chart.setOption(option);
-            },
-            initPacketLossChart() {
-                this.packetLossChart = echarts.init(document.getElementById('network-packet-loss'));
-                this.packetLossChart.setOption({
-                    title: {
-                        text: '网络丢包',
-                        left: 'center',
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    tooltip: {
-                        formatter: "{a} <br/>{b} : {c}%"
-                    },
-                    series: [{
-                        name: '丢包率',
-                        type: 'gauge',
-                        detail: {formatter: '{value}%'},
-                        data: [{value: 0, name: '丢包率'}],
-                        axisLine: {
-                            lineStyle: {
-                                color: [
-                                    [0.2, '#6ab04c'],
-                                    [0.8, '#f6e58d'],
-                                    [1, '#ff6f61']
-                                ]
-                            }
-                        },
-                        pointer: {
-                            width: 5
-                        }
-                    }]
-                });
             }
         }
     });
-</script>
 </script>
 </body>
 </html>

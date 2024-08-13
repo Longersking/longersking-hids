@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络数据包日志仪表板</title>
+    <!-- 引入Vue和Element UI的CDN -->
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <link rel="stylesheet" href="/static/css/code-mirror.css">
+    <script src="../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/echarts.js"></script>
+    <script src="../../../static/js/vue-codemirror.min.js"></script>
+    <script src="../../../static/js/ajax.vue.codemirror.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-container>
+        <el-header>
+            <h2>网络数据包日志仪表板</h2>
+        </el-header>
+        <el-main>
+            <!-- 筛选表单 -->
+            <el-form :inline="true" :model="filters" class="demo-form-inline">
+                <el-form-item label="源IP地址">
+                    <el-input v-model="filters.src_ip" placeholder="请输入源IP"></el-input>
+                </el-form-item>
+                <el-form-item label="目标IP地址">
+                    <el-input v-model="filters.dst_ip" placeholder="请输入目标IP"></el-input>
+                </el-form-item>
+                <el-form-item label="协议">
+                    <el-select v-model="filters.protocol" placeholder="请选择协议">
+                        <el-option label="TCP" value="TCP"></el-option>
+                        <el-option label="UDP" value="UDP"></el-option>
+                        <el-option label="HTTP" value="HTTP"></el-option>
+                        <el-option label="HTTPS" value="HTTPS"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="是否存在风险">
+                    <el-select v-model="filters.is_dangerous" placeholder="请选择">
+                        <el-option label="是" value="1"></el-option>
+                        <el-option label="否" value="0"></el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="fetchPacketLogs">筛选</el-button>
+                    <el-button @click="resetFilters">重置</el-button>
+                </el-form-item>
+            </el-form>
+            <!-- 数据包日志表格 -->
+            <el-table :data="packetLogs" stripe style="width: 100%" @sort-change="handleSort">
+                <el-table-column prop="id" label="ID" sortable></el-table-column>
+                <el-table-column prop="host_ip" label="所属主机" sortable></el-table-column>
+
+                <el-table-column prop="src_ip" label="源IP" sortable></el-table-column>
+                <el-table-column prop="src_port" label="源端口" sortable></el-table-column>
+                <el-table-column prop="dst_ip" label="目标IP" sortable></el-table-column>
+                <el-table-column prop="dst_posrt" label="目标端口" sortable></el-table-column>
+                <el-table-column prop="potocol" label="协议" sortable></el-table-column>
+                <el-table-column prop="pack_size" label="包大小" sortable></el-table-column>
+                <el-table-column prop="is_dangerous" label="风险" sortable>
+                    <template slot-scope="scope">
+                        <el-tag :type="scope.row.is_dangerous ? 'danger' : 'success'">
+                            [[ scope.row.is_dangerous ? '是' : '否' ]]
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="create_time" label="创建时间" sortable></el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-button type="text" @click="showDetails(scope.row)">查看详情</el-button>
+                        <el-button type="text" @click="blockIP(scope.row)">封禁IP</el-button> <!-- 添加这个按钮 -->
+                    </template>
+                </el-table-column>
+            </el-table>
+            <!-- 分页组件 -->
+            <el-pagination
+                    background
+                    layout="total, sizes, prev, pager, next"
+                    :total="totalPacketLogs"
+                    :page-sizes="[10, 20, 50, 100]"
+                    :page-size="pageSize"
+                    @current-change="handlePageChange"
+                    @size-change="handleSizeChange">
+            </el-pagination>
+            <!-- 数据可视化 -->
+            <div id="chart" style="width: 100%; height: 400px;"></div>
+        </el-main>
+    </el-container>
+    <!-- 查看详情对话框 -->
+    <el-dialog title="数据包详情" :visible.sync="dialogVisible" width="50%">
+        <el-form :model="selectedPacketLog">
+            <el-form-item label="源IP">
+                <span>[[ selectedPacketLog.src_ip ]]</span>
+            </el-form-item>
+            <el-form-item label="源端口">
+                <span>[[ selectedPacketLog.src_port ]]</span>
+            </el-form-item>
+            <el-form-item label="目标IP">
+                <span>[[ selectedPacketLog.dst_ip ]]</span>
+            </el-form-item>
+            <el-form-item label="目标端口">
+                <span>[[ selectedPacketLog.dst_posrt ]]</span>
+            </el-form-item>
+            <el-form-item label="协议">
+                <span>[[ selectedPacketLog.potocol]]</span>
+            </el-form-item>
+            <el-form-item label="包大小">
+                <span>[[ selectedPacketLog.pack_size ]]</span>
+            </el-form-item>
+            <el-form-item label="包内容">
+                <el-input type="textarea" v-model="selectedPacketLog.content" rows="10" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="风险">
+                <el-tag :type="selectedPacketLog.is_dangerous ? 'danger' : 'success'">
+                    [[ selectedPacketLog.is_dangerous ? '是' : '否' ]]
+                </el-tag>
+            </el-form-item>
+            <el-form-item label="报警命中">
+                <span>[[ selectedPacketLog.match ]]</span>
+            </el-form-item>
+            <el-form-item label="创建时间">
+                <span>[[ selectedPacketLog.create_time ]]</span>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+</div>
+
+<script>
+    new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app',
+        data() {
+            return {
+                filters: {
+                    src_ip: '',
+                    dst_ip: '',
+                    protocol: '',
+                    is_dangerous: ""
+                },
+                pageSize: 10,
+                packetLogs: [],
+                totalPacketLogs: 0,
+                dialogVisible: false,
+                selectedPacketLog: {},
+                chart: null
+            }
+        },
+        created() {
+            this.fetchPacketLogs();
+        },
+        mounted() {
+            this.chart = echarts.init(document.getElementById('chart'));
+            this.renderChart();
+        },
+        methods: {
+            fetchPacketLogs(page = 1) {
+                const query = new URLSearchParams({
+                    page: typeof page == 'number' ? page : page.detail,
+                    page_size: this.pageSize,  // 传递当前页大小
+                    src_ip: this.filters.src_ip,
+                    dst_ip: this.filters.dst_ip,
+                    protocol: this.filters.protocol,
+                    is_dangerous: Number(this.filters.is_dangerous)
+                }).toString();
+
+                axios.get(`/api/packet/get?${query}`)
+                        .then(response => {
+                            this.packetLogs = response.data.logs;
+                            this.totalPacketLogs = response.data.total;
+                            this.renderChart();
+                        });
+            },
+            handleSort({prop, order}) {
+                // 添加排序逻辑
+            },
+            handleSizeChange(newSize) {
+                this.pageSize = newSize;
+                this.fetchPacketLogs(1);  // 重新请求第一页数据
+            },
+            handlePageChange(page) {
+                this.fetchPacketLogs(page);
+            },
+            showDetails(packetLog) {
+                this.selectedPacketLog = packetLog;
+                this.dialogVisible = true;
+            },
+            blockIP(packetLog) {
+                // 这里添加调用封禁IP接口的代码
+                const payload = {
+                    ip_address: packetLog.src_ip,
+                    client_ip: packetLog.host_ip,  // 假设操作对象是目标IP的客户端
+                    operator_id: JSON.parse(localStorage.getItem("userinfo"))['id']  // 假设这里的操作员ID为1，可以根据实际情况调整
+                };
+
+                axios.post('/api/ws/block_ip', payload)
+                        .then(response => {
+                            this.$message.success(`IP ${packetLog.src_ip} 已被封禁`);
+                        })
+                        .catch(error => {
+                            this.$message.error(`封禁IP失败: ${error.response.data.detail}`);
+                        });
+            },
+            renderChart() {
+                const protocolData = this.packetLogs.reduce((acc, log) => {
+                    acc[log.potocol] = (acc[log.potocol] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const data = Object.entries(protocolData).map(([key, value]) => ({name: key, value}));
+
+                const option = {
+                    title: {text: '协议分布'},
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {type: 'shadow'}
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data.map(d => d.name) // 这里使用 `d.name` 而不是 `d.protocol`
+                    },
+                    yAxis: {type: 'value'},
+                    series: [{
+                        name: '协议数量',
+                        data: data.map(d => d.value),
+                        type: 'bar'
+                    }]
+                };
+
+                this.chart.setOption(option);
+            },
+            resetFilters() {
+                this.filters = {
+                    src_ip: '',
+                    dst_ip: '',
+                    protocol: '',
+                    is_dangerous: ''
+                };
+                this.fetchPacketLogs();
+            }
+        }
+    });
+</script>
+</body>
+</html>

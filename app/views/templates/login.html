@@ -74,7 +74,7 @@
                     "authorization": "bearer " + token
                 }
             }
-            let res = await request.get("/user/userMessage", {}, config)
+            let res = await request.get("/api/user/userMessage", {}, config)
             res = res.data
             if (res !== undefined && res.code >= 0) {
                 window.location.href = "/index"
@@ -92,7 +92,7 @@
                 fd.append("username", this.form.username)
                 fd.append("password", this.form.password)
 
-                let res = await request.post_urlencode("/user/login", fd)
+                let res = await request.post_urlencode("/api/user/login", fd)
                 if (res.code > 0) {
                     // 储存token
                     localStorage.setItem("userToken", res.data.access_token)

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>主机列表</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+    <script src="../../../static/js/axios.js"></script>
+    <script src="../../../static/js/request.js"></script>
+
+    <style>
+    </style>
+</head>
+
+<body>
+<div id="app">
+    <el-row>
+        <el-col :span="8">
+            <el-input v-model="searchForm.ip" placeholder="IP地址"></el-input>
+        </el-col>
+        <el-col :span="8">
+            <el-input v-model="searchForm.user_id" placeholder="用户ID" v-if="isAdmin"></el-input>
+        </el-col>
+        <el-col :span="8">
+            <el-date-picker v-model="searchForm.last_update" type="datetime"
+                            placeholder="最近更新时间"></el-date-picker>
+        </el-col>
+        <el-button @click="searchHosts">查询</el-button>
+    </el-row>
+    <el-table :data="hostData" :default-sort="{prop: 'create_time'}">
+        <el-table-column width="80" prop="host_id" label="主机ID" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="host_ip" label="主机IP" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="alias" label="别名" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="operating_system" label="操作系统" :sortable="true">
+        </el-table-column>
+        <el-table-column label="主存容量" :sortable="true">
+            <template slot-scope="scope">
+            ${scope.row.total_memory_gb}GB
+            </template>
+        </el-table-column>
+        <el-table-column label="磁盘容量" :sortable="true">
+            <template slot-scope="scope">
+            ${scope.row.total_disk_space_gb}GB
+            </template>
+        </el-table-column>
+        <el-table-column label="公网带宽" :sortable="true">
+            <template slot-scope="scope">
+            ${scope.row.network_bandwidth_mbps}MBPS
+            </template>
+        </el-table-column>
+        <el-table-column prop="alias" label="别名" :sortable="true">
+        </el-table-column>
+        <el-table-column prop="status" label="状态">
+            <template slot-scope="scope">
+                <el-tag :type="scope.row.status == 'online' ? 'success' : 'danger'">${ scope.row.status }</el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column prop="create_time" label="添加时间">
+        </el-table-column>
+        <el-table-column prop="last_update" label="最后更新时间">
+        </el-table-column>
+        <el-table-column label="操作">
+            <template slot-scope="scope">
+                <span style="color:blue" @click="jumpInfo(scope.row.host_ip)">查看</span>
+                <span style="color:blue" @click="jumpProcess(scope.row.host_ip)">进程监控</span>
+            </template>
+        </el-table-column>
+    </el-table>
+    <el-pagination
+            @current-change="changePage"
+            layout="prev, pager, next"
+            :total="total">
+    </el-pagination>
+</div>
+
+<script type="text/javascript">
+    new Vue({
+        delimiters: ['${', '}'],
+        el: '#app',
+        data: function () {
+            return {
+                hostData: [],
+                total: 0,
+                searchForm: {
+                    ip: '',
+                    user_id: '',
+                    last_update: ''
+                },
+                isAdmin: false
+            }
+        },
+        async mounted() {
+            await this.getHostList();
+            // this.isAdmin = (await request.get("/api/user/role")).data.role === 'admin';
+        },
+        methods: {
+            jumpInfo(e) {
+                window.location.href = "/host/info?ip=" + e;
+            },
+            jumpProcess(e) {
+                window.location.href = "/host/processes?ip=" + e;
+            },
+            async getHostList(page = 1) {
+                let res = await request.get(`/api/host/get?skip=${(page - 1) * 10}&limit=10`);
+                this.hostData = res.data;
+                this.total = res.total;
+            },
+            async changePage(page) {
+                await this.getHostList(page);
+            },
+            async searchHosts() {
+                let res = await request.get("/api/host/search", {
+                    params: this.searchForm
+                });
+                this.hostData = res.data;
+            }
+        }
+    });
+</script>
+</body>
+</html>

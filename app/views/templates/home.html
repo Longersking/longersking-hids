@@ -100,7 +100,7 @@
                 <div class="card-header">
                     登录记录
                 </div>
-                <el-table :default-sort="{prop:'login_time'}" :stripe="true" :data="logData" height="400px">
+                <el-table :stripe="true" :data="logData" height="400px">
                     <el-table-column prop="id" label="id">
                     </el-table-column>
                     <el-table-column prop="username" label="用户名">
@@ -161,7 +161,7 @@
         methods: {
             // 获取用户登录记录
             async getUserLog(){
-                let res = await request.get("/user/log")
+                let res = await request.get("/api/user/log")
                 this.logData = res.data.data;
             },
             //     获取系统运行信息

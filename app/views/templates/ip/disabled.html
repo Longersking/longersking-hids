@@ -19,6 +19,8 @@
     <el-table :data="logData" :default-sort="{prop: '源端口号'}">
         <el-table-column prop="id" label="ID" :sortable="true">
         </el-table-column>
+        <el-table-column prop="host_ip" label="所属主机" :sortable="true">
+        </el-table-column>
         <el-table-column prop="ip" label="IP" :sortable="true">
         </el-table-column>
         <el-table-column prop="operator" label="操作人" :sortable="true">
@@ -62,26 +64,41 @@
                 this.total = Number(res.data.total)
             },
             async changePage(e) {
-                let res = await request.get("/ip/disabled?page="+e)
+                let res = await request.get("/ip/disabled?page=" + e)
                 this.logData = res.data.data
             },
             async allowIP(row) {
-                let res = await request.get("/ip/delBlack?id=" + row.id)
-                if (res.code === 1) {
-                    this.$message({
-                        type: "success",
-                        message: res.msg
-                    })
-                } else {
+                try {
+                    const payload = {
+                        ip_address: row.ip,
+                        client_ip: row.host_ip,
+                        operator_id: row.operator  // 假设操作人ID在row中已经包含
+                    };
+                    let res = await axios.post("/unblock_ip", payload);
+
+                    if (res.data.status === "success") {
+                        this.$message({
+                            type: "success",
+                            message: res.data.message
+                        });
+                        // 成功后重新加载数据
+                        await this.getUserLog();
+                    } else {
+                        this.$message({
+                            type: "error",
+                            message: res.data.message
+                        });
+                    }
+                } catch (error) {
                     this.$message({
                         type: "error",
-                        message: res.msg
-                    })
+                        message: "解禁IP失败，请重试"
+                    });
                 }
             }
         }
     })
-
 </script>
+
 </body>
 </html>

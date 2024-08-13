@@ -96,16 +96,16 @@
         },
         methods: {
             async getUserList() {
-                let res = await request.get("/user/getList")
+                let res = await request.get("/api/user/getList")
                 this.userData = res.data.data
                 this.total = Number(res.data.total)
             },
             async changePage(e) {
-                let res = await request.get("/user/getList?page=" + e)
+                let res = await request.get("/api/user/getList?page=" + e)
                 this.userData = res.data.data
             },
             async delUser(row) {
-                let res = await request.get("/user/delUser?uid=" + row.id)
+                let res = await request.get("/api/user/delUser?uid=" + row.id)
                 if (res.code === 1) {
                     this.getUserList()
 
@@ -122,7 +122,7 @@
             },
             async disableUser(row) {
                 //     禁用用户
-                let res = await request.get("/user/disableUser?uid=" + row.id)
+                let res = await request.get("/api/user/disableUser?uid=" + row.id)
                 if (res.code === 1) {
                     this.getUserList()
                     this.$message({
@@ -138,7 +138,7 @@
             },
             async allowUser(row) {
                 //     禁用用户
-                let res = await request.get("/user/allowUser?uid=" + row.id)
+                let res = await request.get("/api/user/allowUser?uid=" + row.id)
                 if (res.code === 1) {
                     this.getUserList()
                     this.$message({
@@ -162,7 +162,7 @@
                 }
             },
             async submitForm(){
-                let res = await request.post("/user/updateInfo",this.userInfo)
+                let res = await request.post("/api/user/updateInfo",this.userInfo)
                 if(res.code == 1){
                     this.$message({
                         message: res.msg,

@@ -9,6 +9,7 @@ from .base import Base, engine
 class IpDisabled(Base):
     __tablename__ = "ip_disabled"
     id = Column(Integer, primary_key=True, index=True)
+    host_ip = Column(String(100), unique=True)
     ip = Column(String(100), unique=True)
     create_time = Column(DateTime,default=func.now())
     operator = Column(Integer)

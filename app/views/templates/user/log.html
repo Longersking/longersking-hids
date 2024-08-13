@@ -53,12 +53,12 @@
         methods: {
             // 获取用户登录记录
             async getUserLog(){
-                let res = await request.get("/user/log")
+                let res = await request.get("/api/user/log")
                 this.logData = res.data.data;
                 this.total = res.data.total
             },
             async changePage(e) {
-                let res = await request.get("/user/log?page=" + e)
+                let res = await request.get("/api/user/log?page=" + e)
                 this.logData = res.data.data
             },
         }

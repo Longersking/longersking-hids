@@ -1,7 +1,6 @@
 # controllers/user_controller.py
 from datetime import timedelta
 from typing import Union
-
 from jose import jwt, JWTError
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -9,7 +8,6 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from starlette.requests import Request
-
 from utils.security import get_password_hash, create_access_token, verify_password, SECRET_KEY, ALGORITHM, \
     ACCESS_TOKEN_EXPIRE_MINUTES, oauth2_scheme
 from ..models.event import UserLog
@@ -17,28 +15,9 @@ from ..models.user import User
 from ..models.database import get_db
 from .. import common
 from datetime import datetime
+from app.schemas.user import UserCreate,UserInfo
 # 注册用户路由
 user_router = APIRouter()
-
-
-# 内部接口调用
-
-# 添加用户
-class UserCreate(BaseModel):
-    username: Union[str, int]
-    # email: str
-    password: Union[str, int]
-    role: str = "user"
-    create_time:str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-
-class UserInfo(BaseModel):
-    id: int
-    username: str
-    disabled: int
-    role: str
-    avatar: Union[str, None]
-    create_time: str
 
 
 @user_router.post("/addUser", status_code=status.HTTP_201_CREATED)
@@ -63,7 +42,7 @@ async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 async def add_user_log(user_id: int, username: str, ip_address: str, db: Session = Depends(get_db)):
-    login_record = UserLog(uid=user_id, username=username, ip=ip_address, login_time=datetime.utcnow())
+    login_record = UserLog(uid=user_id, username=username, ip=ip_address, login_time=datetime.now())
     db.add(login_record)
     try:
         db.commit()
@@ -81,9 +60,7 @@ async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequ
         x-www-form-urlencoded
     """
     ip_address = request.client.host
-
     user = db.query(User).filter(User.username == form_data.username).first()
-
     if not user or not verify_password(form_data.password, user.hashed_password):
         return common.dataReturn(0, '用户名或密码错误', user)
     res = await add_user_log(user_id=user.id, username=user.username, ip_address=ip_address, db=db)
@@ -302,7 +279,7 @@ class LogInfo(BaseModel):
 
 @user_router.get("/log",response_model=dict)
 async def getLog(page: int = 1, db: Session = Depends(get_db)):
-    logList = db.query(UserLog).order_by(desc(UserLog.login_time)).limit(10).offset(10 * (page - 1)).all()
+    logList = db.query(UserLog).order_by(desc(UserLog.id)).limit(10).offset(10 * (page - 1)).all()
     count = db.query(UserLog).count()
     log_list = [
         LogInfo(id=item.id, uid=item.uid,username=item.username, login_time=str(item.login_time),

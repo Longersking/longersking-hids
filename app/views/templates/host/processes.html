@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>进程监控</title>
+    <link rel="stylesheet" href="/static/css/elementUI.css">
+    <script src="../../static/js/vue2.js"></script>
+    <script src="../../../static/js/elementUI.js"></script>
+
+    <style>
+        body {
+            background-color: #1d1d1d;
+            color: #fff;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .host-select {host_list
+            margin-bottom: 20px;
+        }
+
+        .overview-card {
+            background-color: #2c2c2c;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .overview-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .overview-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .process-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .process-container > div {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .process-card {
+            background-color: #2c2c2c;
+            border-radius: 5px;
+            padding: 10px;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+
+        .process-card.active {
+            background-color: #3e8e41;
+        }
+
+        .process-card.sleeping {
+            background-color: #a2a2a2;
+        }
+
+        .process-card.disk-sleeping {
+            background-color: rgba(252, 236, 189, 0.31);
+        }
+
+        .process-card.stoped {
+            background-color: rgb(255, 0, 0);
+        }
+
+        .process-info {
+            text-align: center;
+        }
+
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #2c2c2c;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        .legend-running {
+            background-color: #3e8e41;
+        }
+
+        .legend-disk-sleep {
+            background-color: rgba(252, 236, 189, 0.31);
+        }
+
+        .legend-sleeping {
+            background-color: #a4a4a4;
+        }
+
+        .legend-stoped {
+            background-color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="container">
+    <el-select v-model="selectedHost" placeholder="选择主机" class="host-select" @change="onHostChange">
+        <el-option v-for="host in hosts" :key="host.host_ip" :label="host.host_ip" :value="host.host_ip"></el-option>
+    </el-select>
+
+    <div class="overview-card">
+        <div class="overview-item">
+            <div class="overview-title">累计进程</div>
+            <div>[[ totalProcesses ]]</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-title">新增进程</div>
+            <div>[[ startedNum ]]</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-title">停止进程</div>
+            <div>[[ stoppedNum ]]</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-title">活跃进程</div>
+            <div>[[ activeProcesses ]]</div>
+        </div>
+        <div class="overview-item">
+            <div class="overview-title">休眠进程</div>
+            <div>[[ sleepingProcesses ]]</div>
+        </div>
+    </div>
+
+    <div class="process-container">
+        <transition-group name="fade" tag="div">
+            <div v-for="process in sortedProcesses" :key="process.pid" class="process-card" :class="process.status">
+                <div class="process-info">
+                    <div>PID: [[ process.pid ]]</div>
+                    <div>名称: [[ process.name ]]</div>
+                    <div>CPU: [[ process.cpu_percent ]]%</div>
+                    <div>内存: [[ convertMemory(process.memory_info[0]) ]] MB</div>
+                    <div>线程数: [[ process.num_threads ]]</div>
+                </div>
+            </div>
+        </transition-group>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color legend-running"></div>
+            <div>活跃进程</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-sleeping"></div>
+            <div>休眠进程</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-disk-sleep"></div>
+            <div>磁盘睡眠</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color legend-stoped"></div>
+            <div>已停止</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                hosts: [],
+                selectedHost: '',
+                processes: [],
+                totalProcesses: 0,
+                startedNum: 0,
+                stoppedNum: 0,
+                activeProcesses: 0,
+                sleepingProcesses: 0,
+                socket: null,  // 用于存储 WebSocket 对象
+            };
+        },
+        created() {
+            this.fetchHosts();
+        },
+        methods: {
+            async fetchHosts() {
+                try {
+                    const response = await fetch('/api/host/get');
+                    const data = await response.json();
+                    this.hosts = data.data;
+                    if (this.hosts.length > 0) {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const ip = urlParams.get('ip');
+                        this.selectedHost = ip ? ip : this.hosts[0].host_ip;
+                        this.fetchHostData();
+                        this.setupWebSocket();
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch hosts:', error);
+                }
+            },
+            fetchHostData() {
+                // 当切换主机时重置数据
+                this.processes = [];
+                this.totalProcesses = 0;
+                this.startedNum = 0;
+                this.stoppedNum = 0;
+                this.activeProcesses = 0;
+                this.sleepingProcesses = 0;
+            },
+            setupWebSocket() {
+                // 如果已经有 WebSocket 连接，先关闭它
+                if (this.socket) {
+                    this.socket.close();
+                }
+                // 创建新的 WebSocket 连接
+                this.socket = new WebSocket(`ws://121.43.138.234:8003/ws?client_type=web&ip=${this.selectedHost}`);
+                this.socket.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'process_data' && (message.ip === this.selectedHost || !message.ip)) {
+                        const data = JSON.parse(message.data);
+                        this.processes = data.sorted_processes;
+                        this.totalProcesses = this.processes.length;
+                        this.startedNum = data.started_num;
+                        this.stoppedNum = data.stopped_num;
+                        this.activeProcesses = this.processes.filter(p => p.status === 'running').length;
+                        this.sleepingProcesses = this.processes.filter(p => p.status === 'sleeping').length;
+                    }
+                };
+            },
+            onHostChange() {
+                this.fetchHostData();
+                this.setupWebSocket();
+            },
+            convertMemory(bytes) {
+                return (bytes / (1024 * 1024)).toFixed(2);
+            }
+        },
+        computed: {
+            sortedProcesses() {
+                return this.processes.sort((a, b) => b.cpu_percent - a.cpu_percent);
+            }
+        }
+    });
+</script>
+</body>
+</html>
