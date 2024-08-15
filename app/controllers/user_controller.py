@@ -137,7 +137,7 @@ async def add_user(user_data: UserCreate, db: Session = Depends(get_db)):
 
 # 用户登录
 async def get_user_log(user_id: int, username: str, ip_address: str, db: Session = Depends(get_db)):
-    login_record = UserLog(user_id=user_id, username=username, ip_address=ip_address, login_time=datetime.utcnow())
+    login_record = UserLog(user_id=user_id, username=username, ip_address=ip_address, login_time=datetime.now())
     db.add(login_record)
     db.commit()
     db.refresh(login_record)

@@ -1,3 +1,4 @@
+import datetime
 import json
 from app.controllers.traffic_controller import insert_traffic_data
 from app.controllers.IF_prediction_controller import IFPredictionController
@@ -28,7 +29,7 @@ def dealWsData(data_json):
 入网带宽:{1}MBPS
 可能的原因：恶意下载/上传文件
                 """.format(json.loads(data_json['data'])['total_sent'],json.loads(data_json['data'])['total_received'])
-                write_alert(type="traffic_alert", level="light", ip=data_json['ip'], desc=desc, snapshot=data_json['data'])
+                write_alert(type="traffic_alert", level="light", ip=data_json['ip'], desc=desc, snapshot=data_json['data'],create_time=datetime.datetime.now())
         except Exception as e:
             print(f"insert traffic data error: {e}")
     elif data_json['type'] == "system_load":
@@ -36,7 +37,7 @@ def dealWsData(data_json):
             # 预测CPU异常
             res, level, desc = predict_cpu_load(data_json)
             if res:
-                write_alert(type="cpu_load_alert", level=level, ip=data_json['ip'], desc=desc, snapshot=data_json['data'])
+                write_alert(type="cpu_load_alert", level=level, ip=data_json['ip'], desc=desc, snapshot=data_json['data'],create_time=datetime.datetime.now())
             # 写入系统负载记录
             # insert_system_load(data_json)
         except Exception as e:

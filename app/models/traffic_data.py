@@ -11,4 +11,4 @@ class TrafficData(Base):
     total_sent = Column(Float)
     total_received = Column(Float)
     protocol_sizes = Column(JSON)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.now())

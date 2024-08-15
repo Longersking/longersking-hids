@@ -9,4 +9,4 @@ class SystemLoadData(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     ip = Column(String, index=True)
     data = Column(String)
-    create_time = Column(DateTime, default=datetime.utcnow)
+    create_time = Column(DateTime, default=datetime.now())

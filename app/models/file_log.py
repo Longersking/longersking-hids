@@ -18,4 +18,4 @@ class FileLog(Base):
     file_create_time = Column(DateTime, nullable=True, comment='文件创建时间')
     file_modify_time = Column(DateTime, nullable=True, comment='文件操作时间')
     update_time = Column(DateTime, nullable=True, comment='上次修改时间')
-    log_time = Column(DateTime, default=datetime.utcnow, comment='记录时间')
+    log_time = Column(DateTime, default=datetime.now(), comment='记录时间')

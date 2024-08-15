@@ -46,7 +46,7 @@ def deal_file_alarms(data_json):
         port=source_port,
         target_ip=data_json.get('ip', ''),
         target_port=22,
-        create_time=datetime.utcnow()
+        create_time=datetime.now()
     )
     record_file_change(data_json)
     print(alert)
@@ -76,7 +76,7 @@ def record_file_change(data_json):
                                            '%Y-%m-%d %H:%M:%S') if file_info.get('modification_time') else None,
         update_time=datetime.strptime(file_info.get('access_time', ''), '%Y-%m-%d %H:%M:%S') if file_info.get(
             'access_time') else None,
-        log_time=datetime.utcnow()
+        log_time=datetime.now()
     )
 
     db.add(file_log)
@@ -112,7 +112,7 @@ def get_file_logs(
 
 @router.post("/file_logs", response_model=FileLogResponse)
 def create_file_log(file_log: FileLogCreate, db: Session = Depends(get_db)):
-    db_file_log = FileLog(**file_log.dict(), log_time=datetime.utcnow())
+    db_file_log = FileLog(**file_log.dict(), log_time=datetime.now())
     db.add(db_file_log)
     db.commit()
     db.refresh(db_file_log)

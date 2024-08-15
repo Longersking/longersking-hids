@@ -10,7 +10,7 @@ class Event(Base):
     event_id = Column(Integer, primary_key=True, index=True)
     event_type = Column(String(50), nullable=False)
     description = Column(Text)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.now())
 
 class UserLog(Base):
     __tablename__ = "user_log"
