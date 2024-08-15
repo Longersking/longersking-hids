@@ -1,4 +1,15 @@
-# longersking-hids
+<h1>HIDS-混合式入侵检测系统</h1>
+<p style="text-align: right">——结合流量与主机，基于IF与LOF的入侵检测</p>
+<p style="text-align: right">——Combine flows with host,A intrusion system which base on the IF and the LOF.</p>
+
+
+## 概述
+
+![](http://www.ciscn.cn/assets/images/logo.jpg)
+
+2024年第十七届全国大学生信息安全竞赛作品赛决赛优胜奖作品
+
+## 部署方式
 
 ### 后台运行
 使用：
