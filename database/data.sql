@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主机： localhost
--- 生成日期： 2024-06-08 20:45:50
+-- 生成日期： 2024-08-12 00:26:17
 -- 服务器版本： 5.7.44-log
 -- PHP 版本： 7.4.33
 
@@ -24,6 +24,28 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- 表的结构 `alert_log`
+--
+
+CREATE TABLE `alert_log` (
+  `id` int(11) NOT NULL,
+  `type` varchar(255) DEFAULT NULL COMMENT '告警类型',
+  `level` varchar(255) DEFAULT NULL COMMENT '告警等级',
+  `ip` varchar(255) DEFAULT NULL COMMENT '主机IP',
+  `desc` varchar(1000) DEFAULT NULL COMMENT '告警描述',
+  `application` varchar(1000) DEFAULT NULL COMMENT '告警应用',
+  `snapshot` text COMMENT '系统快照',
+  `source_ip` varchar(255) DEFAULT NULL COMMENT '来源IP',
+  `port` varchar(255) DEFAULT NULL COMMENT '来源端口',
+  `target_ip` varchar(255) DEFAULT NULL COMMENT '目标IP',
+  `target_port` varchar(100) DEFAULT NULL COMMENT '目标端口',
+  `packet` text COMMENT '数据包',
+  `create_time` datetime DEFAULT NULL COMMENT '告警时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='主机告警表';
+
+-- --------------------------------------------------------
+
+--
 -- 表的结构 `events`
 --
 
@@ -37,11 +59,78 @@ CREATE TABLE `events` (
 -- --------------------------------------------------------
 
 --
+-- 表的结构 `file_log`
+--
+
+CREATE TABLE `file_log` (
+  `id` int(11) NOT NULL,
+  `ip` varchar(255) DEFAULT NULL COMMENT '主机IP',
+  `file_path` varchar(1000) DEFAULT NULL COMMENT '文件路径',
+  `action` varchar(1000) DEFAULT NULL COMMENT '变更类型',
+  `is_dir` int(10) DEFAULT NULL COMMENT '是否为目录',
+  `size` double DEFAULT NULL COMMENT '文件尺寸',
+  `owner` varchar(255) DEFAULT NULL COMMENT '所属者',
+  `desc` varchar(1000) DEFAULT NULL COMMENT '描述',
+  `is_alarms` int(11) DEFAULT NULL COMMENT '是否为警告',
+  `content` longtext COMMENT '文件内容',
+  `file_create_time` datetime DEFAULT NULL COMMENT '文件创建时间',
+  `file_modify_time` datetime DEFAULT NULL COMMENT '文件操作时间',
+  `update_time` datetime DEFAULT NULL COMMENT '上次修改时间',
+  `log_time` datetime DEFAULT NULL COMMENT '记录即使'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件记录表';
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `hack_ip`
+--
+
+CREATE TABLE `hack_ip` (
+  `hack_id` int(11) NOT NULL,
+  `hack_ip` varchar(50) NOT NULL,
+  `description` text,
+  `timestamp` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `host_list`
+--
+
+CREATE TABLE `host_list` (
+  `host_id` int(11) NOT NULL,
+  `host_ip` varchar(45) NOT NULL,
+  `operating_system` varchar(100) NOT NULL,
+  `alias` varchar(100) DEFAULT NULL,
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` varchar(20) DEFAULT 'offline',
+  `cpu_cores` int(11) DEFAULT NULL,
+  `total_memory_gb` decimal(10,2) DEFAULT NULL,
+  `total_disk_space_gb` decimal(10,2) DEFAULT NULL,
+  `network_bandwidth_mbps` decimal(10,2) DEFAULT NULL,
+  `last_update` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `notes` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- 转存表中的数据 `host_list`
+--
+
+INSERT INTO `host_list` (`host_id`, `host_ip`, `operating_system`, `alias`, `create_time`, `status`, `cpu_cores`, `total_memory_gb`, `total_disk_space_gb`, `network_bandwidth_mbps`, `last_update`, `notes`) VALUES
+(1, '49.232.245.103', 'Centos7.9', '小杜的服务器', '2024-08-04 12:40:43', 'online', 2, '4.00', '50.00', '3.00', '2024-08-04 12:43:27', '无'),
+(3, '121.43.138.234', 'Centos7.9', '中控服务器', '2024-08-04 18:01:27', 'online', 8, '16.00', '200.00', '100.00', '2024-08-08 06:38:50', '用于建设服务端的中控服务器'),
+(4, '121.43.132.126', 'Centos', '欢喜家的', '2024-08-05 10:45:57', 'online', 8, '8.00', '500.00', '100.00', '2024-08-08 06:38:50', NULL);
+
+-- --------------------------------------------------------
+
+--
 -- 表的结构 `ip_disabled`
 --
 
 CREATE TABLE `ip_disabled` (
   `id` int(11) NOT NULL,
+  `host_ip` varchar(255) DEFAULT NULL COMMENT '主机',
   `ip` varchar(255) DEFAULT NULL COMMENT '被封禁IP',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '添加时间',
   `operator` int(11) DEFAULT NULL COMMENT '操作人'
@@ -51,22 +140,119 @@ CREATE TABLE `ip_disabled` (
 -- 转存表中的数据 `ip_disabled`
 --
 
-INSERT INTO `ip_disabled` (`id`, `ip`, `create_time`, `operator`) VALUES
-(17, '158.51.120.69', '2024-06-05 11:18:07', 1),
-(4, '111.111.111.221', '2024-06-05 08:42:04', 1),
-(6, '111.111.111.221', '2024-06-05 08:56:52', 2),
-(7, '181.12.158.77', '2024-06-05 09:02:31', 33),
-(8, '120.179.51.194', '2024-06-05 09:03:19', 33),
-(9, '204.79.37.178', '2024-06-05 09:03:20', 33),
-(10, '190.223.212.251', '2024-06-05 09:03:21', 33),
-(11, '98.196.4.207', '2024-06-05 09:03:22', 33),
-(12, '112.243.203.171', '2024-06-05 09:03:22', 33),
-(13, '59.77.122.111', '2024-06-05 09:03:23', 33),
-(14, '130.156.163.89', '2024-06-05 09:03:24', 33),
-(15, '130.156.163.89', '2024-06-05 09:03:24', 33),
-(16, '130.156.163.89', '2024-06-05 09:03:25', 33),
-(18, '218.207.122.145', '2024-06-05 11:18:09', 1),
-(19, '13.170.10.246', '2024-06-05 11:18:24', 1);
+INSERT INTO `ip_disabled` (`id`, `host_ip`, `ip`, `create_time`, `operator`) VALUES
+(23, '121.43.138.234', '99.99.99.99', '2024-08-10 15:33:04', 1),
+(29, '121.43.138.234', '172.16.136.122', '2024-08-10 19:23:34', 1);
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `menu_list`
+--
+
+CREATE TABLE `menu_list` (
+  `id` int(11) NOT NULL,
+  `parent_id` int(11) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `icon` varchar(100) DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- 转存表中的数据 `menu_list`
+--
+
+INSERT INTO `menu_list` (`id`, `parent_id`, `name`, `icon`, `url`, `create_time`) VALUES
+(1, NULL, '系统管理', 'el-icon-s-home', NULL, '2024-08-04 09:48:48'),
+(2, 1, '首页', 'el-icon-s-home', '/home', '2024-08-04 09:48:48'),
+(3, NULL, '用户管理', 'el-icon-user-solid', NULL, '2024-08-04 09:48:48'),
+(4, 3, '添加用户', 'el-icon-circle-plus', '/add', '2024-08-04 09:48:48'),
+(5, 3, '用户列表', 'el-icon-circle-plus', '/user/list', '2024-08-04 09:48:48'),
+(6, 3, '登录记录', 'el-icon-circle-plus', '/user/logpage', '2024-08-04 09:48:48'),
+(7, NULL, '访问控制', 'el-icon-lock', NULL, '2024-08-04 09:48:48'),
+(8, 7, '访问记录', 'el-icon-coin', '/packet/log', '2024-08-04 09:48:48'),
+(9, 7, '封禁列表', 'el-icon-circle-plus', '/disabled_ip', '2024-08-04 09:48:48'),
+(10, NULL, '网络监控', 'el-icon-view', NULL, '2024-08-04 09:48:48'),
+(11, 10, '监测大屏', 'el-icon-c-scale-to-original', '/network/monitor', '2024-08-04 09:48:48'),
+(12, NULL, '主机管理', 'el-icon-folder', '', '2024-08-04 17:21:22'),
+(13, 12, '添加主机', 'el-icon-circle-plus-outline', '/host/add', '2024-08-04 17:21:53'),
+(14, 12, '主机列表', 'el-icon-tickets', '/host/list', '2024-08-04 17:21:55'),
+(15, 12, '主机概览', 'el-icon-tickets', '/host/info', '2024-08-04 17:21:55'),
+(16, 10, '告警记录', 'el-icon-warning-outline', '/network/alert', '2024-08-04 17:21:55'),
+(17, 12, '进程监控', 'el-icon-s-grid\n', '/host/processes', '2024-08-04 17:21:55'),
+(18, NULL, '文件监控', 'el-icon-document', '', '2024-08-04 17:21:22'),
+(19, 18, '改动记录', 'el-icon-document-remove', '/file/log', '2024-08-04 17:21:53');
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `packet_log`
+--
+
+CREATE TABLE `packet_log` (
+  `id` int(11) NOT NULL,
+  `host_ip` varchar(255) DEFAULT NULL COMMENT '主机IP',
+  `src_ip` varchar(255) DEFAULT NULL COMMENT '源IP地址',
+  `src_port` varchar(255) DEFAULT NULL COMMENT '源端口',
+  `dst_ip` varchar(255) DEFAULT NULL COMMENT '目标IP',
+  `dst_posrt` varchar(255) DEFAULT NULL COMMENT '目标端口',
+  `potocol` varchar(100) DEFAULT NULL COMMENT '协议',
+  `pack_size` double DEFAULT NULL COMMENT '包大小',
+  `content` longtext COMMENT '包内容',
+  `is_dangerous` int(10) DEFAULT NULL COMMENT '是否存在风险',
+  `match` text COMMENT '报警命中',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='抓包记录';
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `permission_group`
+--
+
+CREATE TABLE `permission_group` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `menu_nodes` json NOT NULL,
+  `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- 转存表中的数据 `permission_group`
+--
+
+INSERT INTO `permission_group` (`id`, `name`, `menu_nodes`, `create_time`) VALUES
+(1, '管理员', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]', '2024-08-04 09:49:08'),
+(2, '用户', '[1, 2, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19]', '2024-08-04 09:49:08');
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `system_load_data`
+--
+
+CREATE TABLE `system_load_data` (
+  `id` int(11) NOT NULL,
+  `ip` varchar(255) DEFAULT NULL COMMENT '来源IP',
+  `data` text COMMENT 'JSON格式的数据',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统负载数据表';
+
+-- --------------------------------------------------------
+
+--
+-- 表的结构 `traffic_data`
+--
+
+CREATE TABLE `traffic_data` (
+  `id` int(11) NOT NULL,
+  `ip` text NOT NULL,
+  `total_sent` double NOT NULL,
+  `total_received` double NOT NULL,
+  `protocol_sizes` text NOT NULL,
+  `timestamp` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -102,7 +288,8 @@ INSERT INTO `users` (`id`, `username`, `disabled`, `hashed_password`, `role`, `a
 (44, 'sys', 0, '$2b$12$ObA8Pkaf4jLH4Z4wUKBctuhoRt4I.M9PrEmHLB4oz5yFcvEdzS2cO', 'admin', NULL, NULL),
 (45, 'aaa8888', 0, '$2b$12$8Vxp6Un1XUbso.ZHPcnnFetBgR28IA8tD8ccRyqwFsndV6M0Fr172', 'user', NULL, NULL),
 (46, 'asjldja', 0, '$2b$12$/sLz9eIZP5ayCluxbrYZ5e8kGKfER9lqO28S.N91RA8CXswsVbf.C', 'user', NULL, NULL),
-(47, 'aaa777', 0, '$2b$12$r/.buCi7wZekOyrx01rkg.IKfQxuWcBgO5Bq1u0gfxM8KLnnlyxJC', 'user', NULL, '2024-06-07 10:39:24');
+(47, 'aaa777', 0, '$2b$12$r/.buCi7wZekOyrx01rkg.IKfQxuWcBgO5Bq1u0gfxM8KLnnlyxJC', 'user', NULL, '2024-06-07 10:39:24'),
+(48, 'test666', NULL, '$2b$12$nNZmmd4iICneeYqUec1B5uH7R9G1wzLAfw2e4LEmwVyqbiojUqZca', 'user', NULL, '2024-08-10 23:43:52');
 
 -- --------------------------------------------------------
 
@@ -139,11 +326,31 @@ INSERT INTO `user_log` (`id`, `uid`, `ip`, `username`, `login_time`) VALUES
 (14, 1, '223.240.142.17', 'admin', '2024-06-08 09:15:25'),
 (15, 1, '223.240.142.17', 'admin', '2024-06-08 09:16:12'),
 (16, 1, '223.240.142.17', 'admin', '2024-06-08 09:16:12'),
-(17, 1, '39.144.38.29', 'admin', '2024-06-08 09:16:23');
+(17, 1, '39.144.38.29', 'admin', '2024-06-08 09:16:23'),
+(18, 1, '112.28.229.149', 'admin', '2024-06-08 12:49:07'),
+(19, 1, '111.38.234.232', 'admin', '2024-06-09 09:53:45'),
+(20, 1, '182.239.70.28', 'admin', '2024-06-12 04:54:33'),
+(21, 1, '117.136.118.133', 'admin', '2024-06-13 08:42:21'),
+(22, 1, '127.0.0.1', 'admin', '2024-08-02 13:30:28'),
+(23, 1, '112.28.208.5', 'admin', '2024-08-04 12:23:47'),
+(24, 1, '112.28.208.6', 'admin', '2024-08-08 06:30:14'),
+(25, 1, '112.30.158.140', 'admin', '2024-08-10 15:47:30'),
+(26, 48, '112.30.158.140', 'test666', '2024-08-10 15:48:39'),
+(27, 1, '112.30.158.140', 'admin', '2024-08-11 02:14:37'),
+(28, 1, '112.30.158.140', 'admin', '2024-08-11 02:38:31'),
+(29, 1, '112.28.229.152', 'admin', '2024-08-11 03:16:52'),
+(30, 1, '39.144.240.61', 'admin', '2024-08-11 20:32:06'),
+(31, 1, '223.112.54.196', 'admin', '2024-08-11 20:58:36');
 
 --
 -- 转储表的索引
 --
+
+--
+-- 表的索引 `alert_log`
+--
+ALTER TABLE `alert_log`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- 表的索引 `events`
@@ -153,9 +360,58 @@ ALTER TABLE `events`
   ADD KEY `ix_events_event_id` (`event_id`);
 
 --
+-- 表的索引 `file_log`
+--
+ALTER TABLE `file_log`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 表的索引 `hack_ip`
+--
+ALTER TABLE `hack_ip`
+  ADD PRIMARY KEY (`hack_id`),
+  ADD KEY `ix_hack_ip_hack_id` (`hack_id`);
+
+--
+-- 表的索引 `host_list`
+--
+ALTER TABLE `host_list`
+  ADD PRIMARY KEY (`host_id`);
+
+--
 -- 表的索引 `ip_disabled`
 --
 ALTER TABLE `ip_disabled`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 表的索引 `menu_list`
+--
+ALTER TABLE `menu_list`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 表的索引 `packet_log`
+--
+ALTER TABLE `packet_log`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 表的索引 `permission_group`
+--
+ALTER TABLE `permission_group`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 表的索引 `system_load_data`
+--
+ALTER TABLE `system_load_data`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- 表的索引 `traffic_data`
+--
+ALTER TABLE `traffic_data`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -178,28 +434,82 @@ ALTER TABLE `user_log`
 --
 
 --
+-- 使用表AUTO_INCREMENT `alert_log`
+--
+ALTER TABLE `alert_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- 使用表AUTO_INCREMENT `events`
 --
 ALTER TABLE `events`
   MODIFY `event_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- 使用表AUTO_INCREMENT `file_log`
+--
+ALTER TABLE `file_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 使用表AUTO_INCREMENT `hack_ip`
+--
+ALTER TABLE `hack_ip`
+  MODIFY `hack_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 使用表AUTO_INCREMENT `host_list`
+--
+ALTER TABLE `host_list`
+  MODIFY `host_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- 使用表AUTO_INCREMENT `ip_disabled`
 --
 ALTER TABLE `ip_disabled`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- 使用表AUTO_INCREMENT `menu_list`
+--
+ALTER TABLE `menu_list`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- 使用表AUTO_INCREMENT `packet_log`
+--
+ALTER TABLE `packet_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 使用表AUTO_INCREMENT `permission_group`
+--
+ALTER TABLE `permission_group`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- 使用表AUTO_INCREMENT `system_load_data`
+--
+ALTER TABLE `system_load_data`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- 使用表AUTO_INCREMENT `traffic_data`
+--
+ALTER TABLE `traffic_data`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- 使用表AUTO_INCREMENT `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- 使用表AUTO_INCREMENT `user_log`
 --
 ALTER TABLE `user_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
