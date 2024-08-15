@@ -13,7 +13,7 @@ class AlertLog(Base):
     application = Column(String(1000), nullable=True)
     snapshot = Column(String, nullable=True)
     source_ip = Column(String(255), nullable=True)
-    port =  Column(Integer, nullable=True)
+    port = Column(Integer, nullable=True)
     target_ip = Column(String(255), nullable=True)
     target_port = Column(Integer, nullable=True)
     packet = Column(String, nullable=True)

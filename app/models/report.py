@@ -11,5 +11,5 @@ class Report(Base):
     report_id = Column(Integer, primary_key=True, index=True)
     title = Column(String(100))
     content = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now())
     events = relationship("Event", back_populates="report")  # 与事件模型的关系
